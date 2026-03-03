@@ -1,0 +1,14 @@
+
+response = Map();
+// newuser is a boolean which defines whether the user is a first time subscriber or not!
+if(newuser)
+{
+	// 	response.put("text","Hey *" + user.get("first_name") + "* ! Thanks for subscribing!");
+	response = {"text":"Hey *" + user.get("first_name") + "* ! Thanks for subscribing. OpenProject is a leading project management tool that keeps you in full control of your projects. Say *Hello* to know more","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"OpenProject","thumbnail":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png","theme":"prompt"},"buttons":{{"label":"Say Hello👋","hint":"Say Hello!","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"start_user"}}};
+}
+else
+{
+	// 	response.put("text","Woohoo! Glad that you subscribed back!");
+		response = {"text":"Woohoo! Glad to have you back, *" + user.get("first_name") + "* ! Before dive in, check out the options below. Make sure your extension is properly configured, or tap Help to get a quick gist of what this extension can do. ","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"theme":"modern-inline"},"buttons":{{"label":"Configure","hint":"Ensure that your extension is properly configured","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"configure"},{"label":"Help","hint":"To know about this extension","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"help"}}};
+}
+return response;

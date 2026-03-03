@@ -1,0 +1,627 @@
+
+response = Map();
+formValues = form.get("values");
+info formValues;
+filter = formValues.get("filter");
+/////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+/////////////////////////////////////////////////////////////////
+view_content = list();
+check = false;
+if(filter.isEmpty())
+{
+	no_filter = {"text":"No filters applied","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+	return no_filter;
+}
+else
+{
+	if(filter.get("label").equals("All"))
+	{
+		all_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		content = all_response.getFileContent().get("_embedded").get("elements");
+		for each  val in content
+		{
+			column = Map();
+			column.put("Id",val.get("id"));
+			column.put("Subject",val.get("subject"));
+			column.put("Project",val.get("_links").get("project").get("title"));
+			column.put("Type",val.get("_links").get("type").get("title"));
+			if(val.get("_links").get("assignee").get("title").isNull())
+			{
+				column.put("Assignee","-");
+			}
+			else
+			{
+				column.put("Assignee",val.get("_links").get("assignee").get("title"));
+			}
+			column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+			view_content.add(column);
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Subject"))
+	{
+		title = formValues.get("subject").get("label");
+		index = title.indexOf("(");
+		subject_title = title.subString(0,index - 1);
+		subject_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=500"
+			type :GET
+			connection:"openproject"
+		];
+		content = subject_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.get("subject").equals(subject_title))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				column.put("Subject",val.get("subject"));
+				column.put("Project",val.get("_links").get("project").get("title"));
+				column.put("Type",val.get("_links").get("type").get("title"));
+				if(val.get("_links").get("assignee").get("title").isNull())
+				{
+					column.put("Assignee","-");
+				}
+				else
+				{
+					column.put("Assignee",val.get("_links").get("assignee").get("title"));
+				}
+				column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+				view_content.add(column);
+				count = count + 1;
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Project"))
+	{
+		project_title = formValues.get("project").get("label");
+		project_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=500"
+			type :GET
+			connection:"openproject"
+		];
+		content = project_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.get("_links").get("project").get("title").equals(project_title))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				column.put("Subject",val.get("subject"));
+				column.put("Project",val.get("_links").get("project").get("title"));
+				column.put("Type",val.get("_links").get("type").get("title"));
+				if(val.get("_links").get("assignee").get("title").isNull())
+				{
+					column.put("Assignee","-");
+				}
+				else
+				{
+					column.put("Assignee",val.get("_links").get("assignee").get("title"));
+				}
+				column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+				view_content.add(column);
+				count = count + 1;
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Type"))
+	{
+		type = formValues.get("type").get("label");
+		type_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=500"
+			type :GET
+			connection:"openproject"
+		];
+		content = type_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.get("_links").get("type").get("title").equals(type))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				column.put("Subject",val.get("subject"));
+				column.put("Project",val.get("_links").get("project").get("title"));
+				column.put("Type",val.get("_links").get("type").get("title"));
+				if(val.get("_links").get("assignee").get("title").isNull())
+				{
+					column.put("Assignee","-");
+				}
+				else
+				{
+					column.put("Assignee",val.get("_links").get("assignee").get("title"));
+				}
+				column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+				view_content.add(column);
+				count = count + 1;
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Priority"))
+	{
+		priority = formValues.get("priority").get("label");
+		priority_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=500"
+			type :GET
+			connection:"openproject"
+		];
+		content = priority_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.get("_links").get("priority").get("title").equals(priority))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				column.put("Subject",val.get("subject"));
+				column.put("Project",val.get("_links").get("project").get("title"));
+				column.put("Type",val.get("_links").get("type").get("title"));
+				if(val.get("_links").get("assignee").get("title").isNull())
+				{
+					column.put("Assignee","-");
+				}
+				else
+				{
+					column.put("Assignee",val.get("_links").get("assignee").get("title"));
+				}
+				column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+				view_content.add(column);
+				count = count + 1;
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Due Date"))
+	{
+		due_date = formValues.get("due_date");
+		duedate_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=500"
+			type :GET
+			connection:"openproject"
+		];
+		content = duedate_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("dueDate") && !val.get("dueDate").isNull())
+			{
+				if(val.get("dueDate").equals(due_date))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Subject",val.get("subject"));
+					column.put("Project",val.get("_links").get("project").get("title"));
+					column.put("Type",val.get("_links").get("type").get("title"));
+					if(val.get("_links").get("assignee").get("title").isNull())
+					{
+						column.put("Assignee","-");
+					}
+					else
+					{
+						column.put("Assignee",val.get("_links").get("assignee").get("title"));
+					}
+					column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Start Date"))
+	{
+		start_date = formValues.get("start_date");
+		startdate_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=500"
+			type :GET
+			connection:"openproject"
+		];
+		content = startdate_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("startDate") && !val.get("startDate").isNull())
+			{
+				if(val.get("startDate").equals(start_date))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Subject",val.get("subject"));
+					column.put("Project",val.get("_links").get("project").get("title"));
+					column.put("Type",val.get("_links").get("type").get("title"));
+					if(val.get("_links").get("assignee").get("title").isNull())
+					{
+						column.put("Assignee","-");
+					}
+					else
+					{
+						column.put("Assignee",val.get("_links").get("assignee").get("title"));
+					}
+					column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Completion Date"))
+	{
+		comp_date = formValues.get("comp_date");
+		startdate_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=500"
+			type :GET
+			connection:"openproject"
+		];
+		content = startdate_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("date") && !val.get("date").isNull())
+			{
+				if(val.get("date").equals(comp_date))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Subject",val.get("subject"));
+					column.put("Project",val.get("_links").get("project").get("title"));
+					column.put("Type",val.get("_links").get("type").get("title"));
+					if(val.get("_links").get("assignee").get("title").isNull())
+					{
+						column.put("Assignee","-");
+					}
+					else
+					{
+						column.put("Assignee",val.get("_links").get("assignee").get("title"));
+					}
+					column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Created On"))
+	{
+		comp_date = formValues.get("created_on");
+		startdate_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=500"
+			type :GET
+			connection:"openproject"
+		];
+		content = startdate_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("createdAt") && !val.get("createdAt").isNull())
+			{
+				mod_createdAt = val.get("createdAt").subString(0,10);
+				if(mod_createdAt.equals(comp_date))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Subject",val.get("subject"));
+					column.put("Project",val.get("_links").get("project").get("title"));
+					column.put("Type",val.get("_links").get("type").get("title"));
+					if(val.get("_links").get("assignee").get("title").isNull())
+					{
+						column.put("Assignee","-");
+					}
+					else
+					{
+						column.put("Assignee",val.get("_links").get("assignee").get("title"));
+					}
+					column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Updated On"))
+	{
+		comp_date = formValues.get("updated_on");
+		startdate_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=500"
+			type :GET
+			connection:"openproject"
+		];
+		content = startdate_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("updatedAt") && !val.get("updatedAt").isNull())
+			{
+				mod_updatedAt = val.get("updatedAt").subString(0,10);
+				if(mod_updatedAt.equals(comp_date))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Subject",val.get("subject"));
+					column.put("Project",val.get("_links").get("project").get("title"));
+					column.put("Type",val.get("_links").get("type").get("title"));
+					if(val.get("_links").get("assignee").get("title").isNull())
+					{
+						column.put("Assignee","-");
+					}
+					else
+					{
+						column.put("Assignee",val.get("_links").get("assignee").get("title"));
+					}
+					column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Parent"))
+	{
+		title = formValues.get("parent").get("label");
+		index = title.indexOf("(");
+		parent_title = title.subString(0,index - 1);
+		parent_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=500"
+			type :GET
+			connection:"openproject"
+		];
+		content = parent_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.get("subject").equals(parent_title) && val.get("_links").containsKey("children"))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				column.put("Subject",val.get("subject"));
+				column.put("Project",val.get("_links").get("project").get("title"));
+				column.put("Type",val.get("_links").get("type").get("title"));
+				if(val.get("_links").get("assignee").get("title").isNull())
+				{
+					column.put("Assignee","-");
+				}
+				else
+				{
+					column.put("Assignee",val.get("_links").get("assignee").get("title"));
+				}
+				column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+				view_content.add(column);
+				count = count + 1;
+				children = val.get("_links").get("children");
+				for each  child in children
+				{
+					child_response = invokeurl
+					[
+						url :instance_url + child.get("href").subString(1,child.get("href").length())
+						type :GET
+						connection:"openproject"
+					];
+					content = child_response.getFileContent();
+					column = Map();
+					column.put("Id",content.get("id"));
+					column.put("Subject",content.get("subject"));
+					column.put("Project",content.get("_links").get("project").get("title"));
+					column.put("Type",content.get("_links").get("type").get("title"));
+					if(content.get("_links").get("assignee").get("title").isNull())
+					{
+						column.put("Assignee","-");
+					}
+					else
+					{
+						column.put("Assignee",content.get("_links").get("assignee").get("title"));
+					}
+					column.put("Update","[Update  #" + content.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Assignee"))
+	{
+		project_title = formValues.get("assignee").get("label");
+		project_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=500"
+			type :GET
+			connection:"openproject"
+		];
+		content = project_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(!val.get("_links").get("assignee").get("title").isNull() && val.get("_links").get("assignee").get("title").equals(project_title))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				column.put("Subject",val.get("subject"));
+				column.put("Project",val.get("_links").get("project").get("title"));
+				column.put("Type",val.get("_links").get("type").get("title"));
+				if(val.get("_links").get("assignee").get("title").isNull())
+				{
+					column.put("Assignee","-");
+				}
+				else
+				{
+					column.put("Assignee",val.get("_links").get("assignee").get("title"));
+				}
+				column.put("Update","[Update  #" + val.get("id") + "](invoke.function|authorize)");
+				view_content.add(column);
+				count = count + 1;
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to update filtered work package details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Update","data":{"headers":{"Id","Subject","Project","Type","Assignee","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	if(check)
+	{
+		empty = {"text":"No work packages found for the given filter","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+		return empty;
+	}
+}
+info form;
+return response;

@@ -1,0 +1,131 @@
+
+response = Map();
+//////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+//////////////////////////////////////////////////////////////
+if(sub_action.equals("Notifications"))
+{
+	notify_form = {"type":"form","title":"Notifications","name":"notify_#channel","hint":"To post notifications","button_label":"Submit","inputs":{{"label":"Project","name":"project_notify","placeholder":"Select the projects from the list for which notifications will be posted","multiple":false,"mandatory":true,"type":"select","options":{}},{"label":"Channel","name":"channel_notify","placeholder":"Select the channels from the list where notifications will be posted","multiple":false,"mandatory":true,"type":"select","options":{}}},"action":{"type":"invoke.function","name":"createform"}};
+	content = notify_form.get("inputs").get(0).get("options");
+	count = 0;
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	project_idlist = List();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	info projectid_content;
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+		project_idlist.add(val.get("id"));
+	}
+	for each  val in projectid_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",project_idlist.get(count));
+		content.add(optionMap);
+		count = count + 1;
+	}
+	channel_content = notify_form.get("inputs").get(1).get("options");
+	channel_list = invokeurl
+	[
+		url :"https://cliq.zoho.com/api/v2/channels?joined=true"
+		type :GET
+		connection:"zohocliq"
+	];
+	info channel_list;
+	channelid_map = Map();
+	channelid_list = List();
+	channelid_content = channel_list.get("channels");
+	for each  val in channelid_content
+	{
+		optionMap = Map();
+		optionMap.put("label",val.get("name"));
+		optionMap.put("value",val.get("unique_name"));
+		channel_content.add(optionMap);
+	}
+	return notify_form;
+	// 	response = Map();
+	// 	response = {"text":"Connect to receive timely in-app notifications from OpenProject in your #announcements channel","buttons":{{"label":"Connect","type":"+","action":{"type":"invoke.function","data":{"name":"authenticate"},"confirm":{"title":"Allow to access OpenProject notifications","description":"Connect to OpenProject from within Cliq","input":{"type":"user_webhook_token"}}}}}};
+	// 	return response;
+}
+if(sub_action.equals("Create"))
+{
+	package_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	id_list = List();
+	package_list = List();
+	package_content = package_response.getFileContent().get("_embedded").get("elements");
+	for each  val in package_content
+	{
+		package_type = val.get("_links").get("self").get("title") + " (" + val.get("_links").get("type").get("title") + ")";
+		id_list.add(val.get("id"));
+		package_list.add(package_type);
+	}
+	info package_list;
+	create_remind = {"type":"form","title":"Reminders","name":"reminders","hint":"Add reminders to work package","button_label":"Submit","inputs":{{"label":"Work Package","name":"workpackage","placeholder":"Choose the work package from the list","multiple":false,"mandatory":true,"type":"select","options":{}},{"label":"Note","name":"note","placeholder":"Enter the note for the reminder","min_length":"0","max_length":"50","mandatory":true,"type":"textarea"},{"label":"Remind At","name":"remindat","placeholder":"Select when you'd like to be reminded","mandatory":true,"type":"datetime"}},"action":{"type":"invoke.function","name":"createform"}};
+	package = create_remind.get("inputs").get(0).get("options");
+	size = package_list.size() - 1;
+	for each  val in package_list
+	{
+		rev_val = package_list.get(size);
+		optionMap = Map();
+		optionMap.put("label",rev_val);
+		optionMap.put("value",id_list.get(size));
+		package.add(optionMap);
+		size = size - 1;
+	}
+	return create_remind;
+}
+if(sub_action.equals("List"))
+{
+	view_content = list();
+	all_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=49"
+		type :GET
+		connection:"openproject"
+	];
+	content = all_response.getFileContent().get("_embedded").get("elements");
+	for each  val in content
+	{
+		column = Map();
+		column.put("Work Package Id",val.get("id"));
+		column.put("Subject",val.get("subject"));
+		column.put("Project",val.get("_links").get("project").get("title"));
+		column.put("Type",val.get("_links").get("type").get("title"));
+		if(val.get("_links").get("assignee").get("title").isNull())
+		{
+			column.put("Assignee","-");
+		}
+		else
+		{
+			column.put("Assignee",val.get("_links").get("assignee").get("title"));
+		}
+		column.put("Reminders","[Check   #" + val.get("id") + "](invoke.function|authorize)");
+		view_content.add(column);
+	}
+	if(view_content.length() == 0)
+	{
+		empty = {"text":"No work packages found","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+		return empty;
+	}
+	else
+	{
+		package_list = {"text":"Click to view work package reminders","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/256/10582/10582084.png","theme":"prompt"},"slides":{{"type":"table","title":"Reminders - List","data":{"headers":{"Work Package Id","Subject","Project","Type","Assignee","Reminders"},"rows":view_content}}}};
+		return package_list;
+	}
+}
+return response;

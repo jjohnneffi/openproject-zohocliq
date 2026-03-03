@@ -1,0 +1,61 @@
+
+response = Map();
+if(sub_action.equals("Create"))
+{
+	instance_url = "https://openproject30.openproject.com/";
+	project_form = {"type":"form","title":"Create Project","name":"create_project","hint":"Create Project","button_label":"Submit","inputs":{{"label":"Name","name":"name","placeholder":"Enter the name for the project","min_length":"0","max_length":"25","mandatory":true,"type":"text"},{"label":"Description","name":"description","placeholder":"Enter the description for the project","min_length":"0","max_length":"100","mandatory":false,"type":"textarea"},{"label":"Active Project","name":"active","value":true,"hint":"Indicates whether the project is currently active or already archived","type":"toggle"},{"label":"Public Project","name":"public","hint":"Indicates whether the project is accessible for everybody","value":false,"type":"toggle"},{"label":"Status","name":"status","placeholder":"Choose the status from the list","value":"Finished","multiple":false,"mandatory":false,"type":"dynamic_select","options":{}},{"label":"Status Explanation","name":"status_explanation","placeholder":"Enter the status explanation for the project","min_length":"0","max_length":"100","mandatory":false,"type":"textarea"},{"label":"Parent","name":"parent","placeholder":"Choose the parent project from the list","multiple":false,"mandatory":false,"type":"select","options":{}}},"action":{"type":"invoke.function","name":"createform"}};
+	project = invokeurl
+	[
+		url :instance_url + "api/v3/projects/form"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	status_options = project_form.get("inputs").get(4).get("options");
+	parent_options = project_form.get("inputs").get(6).get("options");
+	status = project.getFileContent().get("_embedded").get("schema").get("status").get("_links").get("allowedValues");
+	status_map = Map();
+	for each  value in status
+	{
+		content = Map();
+		content.put("label",value.get("title"));
+		new_status = replaceAll(value.get("title")," ","");
+		content.put("value",new_status);
+		status_map.put(value.get("title"),value.get("href"));
+		status_options.add(content);
+	}
+	available_parent = invokeurl
+	[
+		url :instance_url + "api/v3/projects/available_parent_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent = available_parent.getFileContent().get("_embedded").get("elements");
+	parent_map = Map();
+	for each  value in parent
+	{
+		content = Map();
+		content.put("label",value.get("_links").get("self").get("title"));
+		new_parent = replaceAll(value.get("_links").get("self").get("title")," ","");
+		content.put("value",new_parent.getAlphaNumeric());
+		parent_map.put(value.get("_links").get("self").get("title"),value.get("_links").get("self").get("href"));
+		parent_options.add(content);
+	}
+	return project_form;
+}
+else if(sub_action.equals("View"))
+{
+	project_view = {"type":"form","title":"View Project","name":"view_project","hint":"View Project","button_label":"Submit","inputs":{{"label":"Filter","name":"filter","trigger_on_change":true,"placeholder":"Choose a filter to get the project","multiple":false,"mandatory":false,"type":"select","options":{{"value":"All","label":"All"},{"value":"Name","label":"Name"},{"value":"CreatedAt","label":"Created At"},{"value":"UpdatedAt","label":"Updated At"},{"value":"ActiveProjectTrue","label":"Active Project (True)"},{"value":"ActiveProjectFalse","label":"Active Project (False)"},{"value":"PublicProjectTrue","label":"Public Project (True)"},{"value":"PublicProjectFalse","label":"Public Project (False)"},{"value":"Status","label":"Status"},{"value":"Parent","label":"Parent"}}}},"action":{"type":"invoke.function","name":"fetchproject"}};
+	return project_view;
+}
+else if(sub_action.equals("Update"))
+{
+	project_update = {"type":"form","title":"Update Project","name":"update_project","hint":"Update Project","button_label":"Submit","inputs":{{"label":"Filter","name":"filter","trigger_on_change":true,"placeholder":"Choose a filter to update the project","multiple":false,"mandatory":false,"type":"select","options":{{"value":"All","label":"All"},{"value":"Name","label":"Name"},{"value":"CreatedAt","label":"Created At"},{"value":"UpdatedAt","label":"Updated At"},{"value":"ActiveProjectTrue","label":"Active Project (True)"},{"value":"ActiveProjectFalse","label":"Active Project (False)"},{"value":"PublicProjectTrue","label":"Public Project (True)"},{"value":"PublicProjectFalse","label":"Public Project (False)"},{"value":"Status","label":"Status"},{"value":"Parent","label":"Parent"}}}},"action":{"type":"invoke.function","name":"updateproject"}};
+	return project_update;
+}
+else if(sub_action.equals("Delete"))
+{
+	project_delete = {"type":"form","title":"Delete Project","name":"delete_project","hint":"Delete Project","button_label":"Submit","inputs":{{"label":"Filter","name":"filter","trigger_on_change":true,"placeholder":"Choose a filter to delete the project","multiple":false,"mandatory":false,"type":"select","options":{{"value":"All","label":"All"},{"value":"Name","label":"Name"},{"value":"CreatedAt","label":"Created At"},{"value":"UpdatedAt","label":"Updated At"},{"value":"ActiveProjectTrue","label":"Active Project (True)"},{"value":"ActiveProjectFalse","label":"Active Project (False)"},{"value":"PublicProjectTrue","label":"Public Project (True)"},{"value":"PublicProjectFalse","label":"Public Project (False)"},{"value":"Status","label":"Status"},{"value":"Parent","label":"Parent"}}}},"action":{"type":"invoke.function","name":"deleteproject"}};
+	return project_delete;
+}
+return response;

@@ -1,0 +1,23 @@
+
+response = Map();
+if(sub_action.equals("Add"))
+{
+	add_user = {"type":"form","title":"Add User","name":"add_user","hint":"Add User","button_label":"Submit","inputs":{{"label":"User Creation Type","name":"status","trigger_on_change":true,"placeholder":"Choose the creation type from the list","multiple":false,"mandatory":true,"type":"select","options":{{"value":"Active","label":"Active"},{"value":"Invited","label":"Invited"}}},{"label":"Login ID","name":"login","placeholder":"Set the login ID for the user","min_length":"0","max_length":"50","mandatory":true,"type":"text"},{"label":"Password","name":"password","placeholder":"Set the password for the user (min 10 characters)","min_length":"0","max_length":"50","mandatory":true,"type":"text","format":"password"},{"label":"First Name","name":"firstName","placeholder":"Enter user's first name","min_length":"0","max_length":"50","mandatory":true,"type":"text"},{"label":"Last Name","name":"lastName","placeholder":"Enter user's last name","min_length":"0","max_length":"50","mandatory":true,"type":"text"},{"label":"Email","name":"email","placeholder":"Enter the user's email address","mandatory":true,"type":"text","format":"email"},{"label":"Admin","name":"admin","hint":"Grants the user full administrative priviledges","value":false,"type":"toggle"}},"action":{"type":"invoke.function","name":"createform"}};
+	return add_user;
+}
+if(sub_action.equals("View"))
+{
+	user_view = {"type":"form","title":"View User","name":"view_user","hint":"View User","button_label":"Submit","inputs":{{"label":"Filter","name":"filter","trigger_on_change":true,"placeholder":"Choose a filter to get the user","multiple":false,"mandatory":false,"type":"select","options":{{"value":"All","label":"All"},{"value":"Name","label":"Name"},{"value":"Email","label":"Email"},{"value":"CreatedOn","label":"Created On"},{"value":"UpdatedOn","label":"Updated On"},{"value":"AdminTrue","label":"Admin (True)"},{"value":"AdminFalse","label":"Admin (False)"},{"label":"Status (Active)","value":"StatusActive"},{"label":"Status (Invited)","value":"StatusInvited"}}}},"action":{"type":"invoke.function","name":"viewuser"}};
+	return user_view;
+}
+if(sub_action.equals("Edit"))
+{
+	user_edit = {"type":"form","title":"Edit User","name":"edit_user","hint":"Edit User","button_label":"Submit","inputs":{{"label":"Filter","name":"filter","trigger_on_change":true,"placeholder":"Choose a filter to edit the user","multiple":false,"mandatory":false,"type":"select","options":{{"value":"All","label":"All"},{"value":"Name","label":"Name"},{"value":"Email","label":"Email"},{"value":"CreatedOn","label":"Created On"},{"value":"UpdatedOn","label":"Updated On"},{"value":"AdminTrue","label":"Admin (True)"},{"value":"AdminFalse","label":"Admin (False)"},{"label":"Status (Active)","value":"StatusActive"},{"label":"Status (Invited)","value":"StatusInvited"}}}},"action":{"type":"invoke.function","name":"edituser"}};
+	return user_edit;
+}
+if(sub_action.equals("Remove"))
+{
+	user_remove = {"type":"form","title":"Remove User","name":"remove_user","hint":"Remove User","button_label":"Submit","inputs":{{"label":"Filter","name":"filter","trigger_on_change":true,"placeholder":"Choose a filter to remove the user","multiple":false,"mandatory":false,"type":"select","options":{{"value":"All","label":"All"},{"value":"Name","label":"Name"},{"value":"Email","label":"Email"},{"value":"CreatedOn","label":"Created On"},{"value":"UpdatedOn","label":"Updated On"},{"value":"AdminTrue","label":"Admin (True)"},{"value":"AdminFalse","label":"Admin (False)"},{"label":"Status (Active)","value":"StatusActive"},{"label":"Status (Invited)","value":"StatusInvited"}}}},"action":{"type":"invoke.function","name":"removeuser"}};
+	return user_remove;
+}
+return response;

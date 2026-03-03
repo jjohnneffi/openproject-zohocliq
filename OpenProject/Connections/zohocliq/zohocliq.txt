@@ -1,0 +1,6 @@
+response = invokeUrl [
+	url: <url>
+	type: GET/POST/PUT/DELETE
+	parameters: <paramMap/string>
+	connection: "zohocliq"
+];

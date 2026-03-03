@@ -1,0 +1,5 @@
+
+// Configure the bot's incoming webhook URL in any third-party service to trigger this handler.
+response = Map();
+response.put("text","You received a HTTP " + http_method + " webhook call with " + params.size() + " param(s), " + headers.size() + " header(s) and a JSON body of length : " + body.length());
+return response;

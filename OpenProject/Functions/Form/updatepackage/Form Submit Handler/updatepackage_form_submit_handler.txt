@@ -1,0 +1,690 @@
+
+response = Map();
+///////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+//////////////////////////////////////////////////////////////////
+info form;
+if(form.get("name").startsWith("#@"))
+{
+	upd_id = form.get("name").subString(2);
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	project_ids = Map();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+		project_ids.put(val.get("name"),val.get("id"));
+	}
+	// info projectid_list;
+	// info projectid_map;
+	// Project Ids
+	type_response = invokeurl
+	[
+		url :instance_url + "api/v3/types"
+		type :GET
+		connection:"openproject"
+	];
+	typeid_map = Map();
+	typeid_content = type_response.getFileContent().get("_embedded").get("elements");
+	for each  val in typeid_content
+	{
+		typeid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info typeid_map;
+	// Type Ids
+	// info categoryid;
+	// Category Id
+	priority_response = invokeurl
+	[
+		url :instance_url + "api/v3/priorities"
+		type :GET
+		connection:"openproject"
+	];
+	priorityid_map = Map();
+	priorityid_content = priority_response.getFileContent().get("_embedded").get("elements");
+	for each  val in priorityid_content
+	{
+		priorityid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info priorityid_map;
+	// Priority Ids
+	projectphase_definitions_response = invokeurl
+	[
+		url :instance_url + "api/v3/project_phase_definitions"
+		type :GET
+		connection:"openproject"
+	];
+	projectphase_definitions_map = Map();
+	projectphase_definitions_content = projectphase_definitions_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectphase_definitions_content
+	{
+		projectphase_definitions_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info projectphase_definitions_map;
+	// Project Phase Definition Ids
+	status_response = invokeurl
+	[
+		url :instance_url + "api/v3/statuses"
+		type :GET
+		connection:"openproject"
+	];
+	status_map = Map();
+	status_content = status_response.getFileContent().get("_embedded").get("elements");
+	for each  val in status_content
+	{
+		status_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info status_map;
+	// Status Ids
+	assignee_response = invokeurl
+	[
+		url :instance_url + "api/v3/users?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	assignee_map = Map();
+	assignee_content = assignee_response.getFileContent().get("_embedded").get("elements");
+	for each  val in assignee_content
+	{
+		assignee_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info assignee_map;
+	// Assignee Ids
+	parent_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent_map = Map();
+	parent_list = List();
+	parent_content = parent_response.getFileContent().get("_embedded").get("elements");
+	for each  val in parent_content
+	{
+		if(!val.get("_links").get("type").get("title").equals("Milestone"))
+		{
+			parent_type = val.get("_links").get("self").get("title") + " (" + val.get("_links").get("type").get("title") + ")";
+			parent_map.put(parent_type,val.get("_links").get("self").get("href"));
+			parent_list.add(parent_type);
+		}
+	}
+	formValues = form.get("values");
+	lock_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + upd_id
+		type :GET
+		connection:"openproject"
+	];
+	lock_version = lock_response.getFileContent().get("lockVersion");
+	info formValues;
+	subject = formValues.get("subject");
+	description = formValues.get("description");
+	percent = formValues.get("percentage_done");
+	ignore_days = formValues.get("ignore_days");
+	type = formValues.get("type").get("label");
+	priority = formValues.get("priority").get("label");
+	project = formValues.get("project").get("label");
+	projectids = project_ids.get(project);
+	category_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + projectids + "/categories"
+		type :GET
+		connection:"openproject"
+	];
+	category_id = null;
+	if(category_response.getFileContent().get("_embedded").get("elements").length() != 0)
+	{
+		category_id = category_response.getFileContent().get("_embedded").get("elements").get(0).get("_links").get("self").get("href");
+	}
+	parent = formValues.get("parent").get("label");
+	status = formValues.get("status").get("label");
+	assignee = formValues.get("assignee").get("label");
+	projectphase = formValues.get("project_phase").get("label");
+	start_date = formValues.get("start_date");
+	due_date = formValues.get("due_date");
+	comp_date = formValues.get("comp_date");
+	if(comp_date.isNull())
+	{
+		comp_date = null;
+	}
+	if(start_date.isNull())
+	{
+		start_date = null;
+	}
+	if(due_date.isNull())
+	{
+		due_date = null;
+	}
+	if(assignee.isNull())
+	{
+		assignee = null;
+	}
+	if(!parent.isNull())
+	{
+		parent_index = parent.indexOf("(");
+		new_parent = parent.subString(0,parent_index - 1);
+	}
+	else
+	{
+		new_parent = null;
+	}
+	if(!projectphase.isNull())
+	{
+		phase_def_href = projectphase_definitions_map.get(projectphase);
+		phase_href = phase_def_href.subString(0,21) + phase_def_href.subString(32,phase_def_href.length());
+		phase_title = projectphase;
+	}
+	else
+	{
+		phase_href = null;
+		phase_def_href = null;
+		phase_title = null;
+	}
+	if(type.equalsIgnoreCase("Milestone"))
+	{
+		packageMap = {"lockVersion":lock_version,"subject":subject,"description":{"format":"markdown","raw":description,"html":""},"scheduleManually":true,"date":comp_date,"ignoreNonWorkingDays":ignore_days,"percentageDone":percent,"_links":{"category":{"href":category_id},"type":{"href":typeid_map.get(type),"title":type},"priority":{"href":priorityid_map.get(priority),"title":priority},"project":{"href":projectid_map.get(project),"title":project},"projectPhase":{"href":phase_href,"title":phase_title},"projectPhaseDefinition":{"href":phase_def_href,"title":phase_title},"status":{"href":status_map.get(status),"title":status},"responsible":{"href":assignee_map.get(assignee)},"assignee":{"href":assignee_map.get(assignee)},"version":{"href":null},"parent":{"href":parent_map.get(parent),"title":new_parent}}};
+	}
+	else
+	{
+		packageMap = {"lockVersion":lock_version,"subject":subject,"description":{"format":"markdown","raw":description,"html":""},"scheduleManually":true,"startDate":start_date,"dueDate":due_date,"ignoreNonWorkingDays":ignore_days,"percentageDone":percent,"_links":{"category":{"href":category_id},"type":{"href":typeid_map.get(type),"title":type},"priority":{"href":priorityid_map.get(priority),"title":priority},"project":{"href":projectid_map.get(project),"title":project},"projectPhase":{"href":phase_href,"title":phase_title},"projectPhaseDefinition":{"href":phase_def_href,"title":phase_title},"status":{"href":status_map.get(status),"title":status},"responsible":{"href":assignee_map.get(assignee)},"assignee":{"href":assignee_map.get(assignee)},"version":{"href":null},"parent":{"href":parent_map.get(parent),"title":new_parent}}};
+	}
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+	workpackage_form = invokeurl
+	[
+		url :"https://openproject30.openproject.com/api/v3/work_packages/" + upd_id
+		type :PATCH
+		parameters:packageMap.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	content = workpackage_form.getFileContent();
+	info content;
+	if(content.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while updating the work package"};
+		return error_banner;
+	}
+	else if(workpackage_form.getFileContent().get("_type").equalsIgnoreCase("WorkPackage"))
+	{
+		id = content.get("id");
+		subject = content.get("subject");
+		description = content.get("description").get("raw");
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		percent = content.get("percentageDone");
+		ignore = content.get("ignoreNonWorkingDays");
+		author = content.get("_links").get("author").get("title");
+		type = null;
+		priority = null;
+		project = null;
+		status = null;
+		assignee = null;
+		parent = null;
+		project_phase_def = null;
+		if(!content.get("_links").get("type").get("href").isNull())
+		{
+			type = content.get("_links").get("type").get("title");
+		}
+		if(!content.get("_links").get("priority").get("href").isNull())
+		{
+			priority = content.get("_links").get("priority").get("title");
+		}
+		if(!content.get("_links").get("project").get("href").isNull())
+		{
+			project = content.get("_links").get("project").get("title");
+		}
+		if(!content.get("_links").get("status").get("href").isNull())
+		{
+			status = content.get("_links").get("status").get("title");
+		}
+		if(!content.get("_links").get("assignee").get("href").isNull())
+		{
+			assignee = content.get("_links").get("assignee").get("title");
+		}
+		if(!content.get("_links").get("parent").get("href").isNull())
+		{
+			parent = content.get("_links").get("parent").get("title");
+		}
+		if(!content.get("_links").get("projectPhaseDefinition").get("href").isNull())
+		{
+			project_phase_def = content.get("_links").get("projectPhaseDefinition").get("title");
+		}
+		if(content.get("startDate").isNull())
+		{
+			start_date1 = "";
+		}
+		else
+		{
+			start_date = content.get("startDate");
+			start_date1 = toDate(start_date,"yyyy-MM-dd");
+		}
+		if(content.get("dueDate").isNull())
+		{
+			due_date1 = "";
+		}
+		else
+		{
+			due_date = content.get("dueDate");
+			due_date1 = toDate(due_date,"yyyy-MM-dd");
+		}
+		if(content.get("date").isNull())
+		{
+			comp_date1 = "";
+		}
+		else
+		{
+			comp_date = content.get("date");
+			comp_date1 = toDate(comp_date,"yyyy-MM-dd");
+		}
+		ig = Map();
+		ig.put(true,"Yes");
+		ig.put(false,"No");
+		if(assignee.isNull())
+		{
+			assignee = "";
+		}
+		if(type.isNull())
+		{
+			type = "";
+		}
+		if(project.isNull())
+		{
+			project = "";
+		}
+		if(description.equals(""))
+		{
+			desc = "";
+		}
+		else
+		{
+			desc = description;
+		}
+		if(percent == null)
+		{
+			per = 0;
+		}
+		else
+		{
+			per = percent;
+		}
+		if(project_phase_def.isNull())
+		{
+			project_phase_def = "";
+		}
+		if(parent.isNull())
+		{
+			parent = "";
+		}
+		if(status.isNull())
+		{
+			status = "";
+		}
+		if(priority.isNull())
+		{
+			priority = "";
+		}
+		success_banner = {"type":"banner","status":"success","text":"Work Package (# " + id + ")" + " has been updated successfully"};
+		return success_banner;
+	}
+}
+else
+{
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	project_ids = Map();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+		project_ids.put(val.get("name"),val.get("id"));
+	}
+	// info projectid_list;
+	// info projectid_map;
+	// Project Ids
+	type_response = invokeurl
+	[
+		url :instance_url + "api/v3/types"
+		type :GET
+		connection:"openproject"
+	];
+	typeid_map = Map();
+	typeid_content = type_response.getFileContent().get("_embedded").get("elements");
+	for each  val in typeid_content
+	{
+		typeid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info typeid_map;
+	// Type Ids
+	// info categoryid;
+	// Category Id
+	priority_response = invokeurl
+	[
+		url :instance_url + "api/v3/priorities"
+		type :GET
+		connection:"openproject"
+	];
+	priorityid_map = Map();
+	priorityid_content = priority_response.getFileContent().get("_embedded").get("elements");
+	for each  val in priorityid_content
+	{
+		priorityid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info priorityid_map;
+	// Priority Ids
+	projectphase_definitions_response = invokeurl
+	[
+		url :instance_url + "api/v3/project_phase_definitions"
+		type :GET
+		connection:"openproject"
+	];
+	projectphase_definitions_map = Map();
+	projectphase_definitions_content = projectphase_definitions_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectphase_definitions_content
+	{
+		projectphase_definitions_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info projectphase_definitions_map;
+	// Project Phase Definition Ids
+	status_response = invokeurl
+	[
+		url :instance_url + "api/v3/statuses"
+		type :GET
+		connection:"openproject"
+	];
+	status_map = Map();
+	status_content = status_response.getFileContent().get("_embedded").get("elements");
+	for each  val in status_content
+	{
+		status_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info status_map;
+	// Status Ids
+	assignee_response = invokeurl
+	[
+		url :instance_url + "api/v3/users?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	assignee_map = Map();
+	assignee_content = assignee_response.getFileContent().get("_embedded").get("elements");
+	for each  val in assignee_content
+	{
+		assignee_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info assignee_map;
+	// Assignee Ids
+	parent_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent_map = Map();
+	parent_list = List();
+	parent_content = parent_response.getFileContent().get("_embedded").get("elements");
+	for each  val in parent_content
+	{
+		if(!val.get("_links").get("type").get("title").equals("Milestone"))
+		{
+			parent_type = val.get("_links").get("self").get("title") + " (" + val.get("_links").get("type").get("title") + ")";
+			parent_map.put(parent_type,val.get("_links").get("self").get("href"));
+			parent_list.add(parent_type);
+		}
+	}
+	formValues = form.get("values");
+	lock_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + form.get("name")
+		type :GET
+		connection:"openproject"
+	];
+	lock_version = lock_response.getFileContent().get("lockVersion");
+	info formValues;
+	subject = formValues.get("subject");
+	description = formValues.get("description");
+	percent = formValues.get("percentage_done");
+	ignore_days = formValues.get("ignore_days");
+	type = formValues.get("type").get("label");
+	priority = formValues.get("priority").get("label");
+	project = formValues.get("project").get("label");
+	projectids = project_ids.get(project);
+	category_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + projectids + "/categories"
+		type :GET
+		connection:"openproject"
+	];
+	category_id = null;
+	if(category_response.getFileContent().get("_embedded").get("elements").length() != 0)
+	{
+		category_id = category_response.getFileContent().get("_embedded").get("elements").get(0).get("_links").get("self").get("href");
+	}
+	parent = formValues.get("parent").get("label");
+	status = formValues.get("status").get("label");
+	assignee = formValues.get("assignee").get("label");
+	projectphase = formValues.get("project_phase").get("label");
+	start_date = formValues.get("start_date");
+	due_date = formValues.get("due_date");
+	comp_date = formValues.get("comp_date");
+	if(comp_date.isNull())
+	{
+		comp_date = null;
+	}
+	if(start_date.isNull())
+	{
+		start_date = null;
+	}
+	if(due_date.isNull())
+	{
+		due_date = null;
+	}
+	if(assignee.isNull())
+	{
+		assignee = null;
+	}
+	if(!parent.isNull())
+	{
+		parent_index = parent.indexOf("(");
+		new_parent = parent.subString(0,parent_index - 1);
+	}
+	else
+	{
+		new_parent = null;
+	}
+	if(!projectphase.isNull())
+	{
+		phase_def_href = projectphase_definitions_map.get(projectphase);
+		phase_href = phase_def_href.subString(0,21) + phase_def_href.subString(32,phase_def_href.length());
+		phase_title = projectphase;
+	}
+	else
+	{
+		phase_href = null;
+		phase_def_href = null;
+		phase_title = null;
+	}
+	if(type.equalsIgnoreCase("Milestone"))
+	{
+		packageMap = {"lockVersion":lock_version,"subject":subject,"description":{"format":"markdown","raw":description,"html":""},"scheduleManually":true,"date":comp_date,"ignoreNonWorkingDays":ignore_days,"percentageDone":percent,"_links":{"category":{"href":category_id},"type":{"href":typeid_map.get(type),"title":type},"priority":{"href":priorityid_map.get(priority),"title":priority},"project":{"href":projectid_map.get(project),"title":project},"projectPhase":{"href":phase_href,"title":phase_title},"projectPhaseDefinition":{"href":phase_def_href,"title":phase_title},"status":{"href":status_map.get(status),"title":status},"responsible":{"href":assignee_map.get(assignee)},"assignee":{"href":assignee_map.get(assignee)},"version":{"href":null},"parent":{"href":parent_map.get(parent),"title":new_parent}}};
+	}
+	else
+	{
+		packageMap = {"lockVersion":lock_version,"subject":subject,"description":{"format":"markdown","raw":description,"html":""},"scheduleManually":true,"startDate":start_date,"dueDate":due_date,"ignoreNonWorkingDays":ignore_days,"percentageDone":percent,"_links":{"category":{"href":category_id},"type":{"href":typeid_map.get(type),"title":type},"priority":{"href":priorityid_map.get(priority),"title":priority},"project":{"href":projectid_map.get(project),"title":project},"projectPhase":{"href":phase_href,"title":phase_title},"projectPhaseDefinition":{"href":phase_def_href,"title":phase_title},"status":{"href":status_map.get(status),"title":status},"responsible":{"href":assignee_map.get(assignee)},"assignee":{"href":assignee_map.get(assignee)},"version":{"href":null},"parent":{"href":parent_map.get(parent),"title":new_parent}}};
+	}
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+	workpackage_form = invokeurl
+	[
+		url :"https://openproject30.openproject.com/api/v3/work_packages/" + form.get("name")
+		type :PATCH
+		parameters:packageMap.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	content = workpackage_form.getFileContent();
+	info content;
+	if(content.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while updating the work package" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(workpackage_form.getFileContent().get("_type").equalsIgnoreCase("WorkPackage"))
+	{
+		id = content.get("id");
+		subject = content.get("subject");
+		description = content.get("description").get("raw");
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		percent = content.get("percentageDone");
+		ignore = content.get("ignoreNonWorkingDays");
+		author = content.get("_links").get("author").get("title");
+		type = null;
+		priority = null;
+		project = null;
+		status = null;
+		assignee = null;
+		parent = null;
+		project_phase_def = null;
+		if(!content.get("_links").get("type").get("href").isNull())
+		{
+			type = content.get("_links").get("type").get("title");
+		}
+		if(!content.get("_links").get("priority").get("href").isNull())
+		{
+			priority = content.get("_links").get("priority").get("title");
+		}
+		if(!content.get("_links").get("project").get("href").isNull())
+		{
+			project = content.get("_links").get("project").get("title");
+		}
+		if(!content.get("_links").get("status").get("href").isNull())
+		{
+			status = content.get("_links").get("status").get("title");
+		}
+		if(!content.get("_links").get("assignee").get("href").isNull())
+		{
+			assignee = content.get("_links").get("assignee").get("title");
+		}
+		if(!content.get("_links").get("parent").get("href").isNull())
+		{
+			parent = content.get("_links").get("parent").get("title");
+		}
+		if(!content.get("_links").get("projectPhaseDefinition").get("href").isNull())
+		{
+			project_phase_def = content.get("_links").get("projectPhaseDefinition").get("title");
+		}
+		if(content.get("startDate").isNull())
+		{
+			start_date1 = "";
+		}
+		else
+		{
+			start_date = content.get("startDate");
+			start_date1 = toDate(start_date,"yyyy-MM-dd");
+		}
+		if(content.get("dueDate").isNull())
+		{
+			due_date1 = "";
+		}
+		else
+		{
+			due_date = content.get("dueDate");
+			due_date1 = toDate(due_date,"yyyy-MM-dd");
+		}
+		if(content.get("date").isNull())
+		{
+			comp_date1 = "";
+		}
+		else
+		{
+			comp_date = content.get("date");
+			comp_date1 = toDate(comp_date,"yyyy-MM-dd");
+		}
+		ig = Map();
+		ig.put(true,"Yes");
+		ig.put(false,"No");
+		if(assignee.isNull())
+		{
+			assignee = "";
+		}
+		if(type.isNull())
+		{
+			type = "";
+		}
+		if(project.isNull())
+		{
+			project = "";
+		}
+		if(description.equals(""))
+		{
+			desc = "";
+		}
+		else
+		{
+			desc = description;
+		}
+		if(percent == null)
+		{
+			per = 0;
+		}
+		else
+		{
+			per = percent;
+		}
+		if(project_phase_def.isNull())
+		{
+			project_phase_def = "";
+		}
+		if(parent.isNull())
+		{
+			parent = "";
+		}
+		if(status.isNull())
+		{
+			status = "";
+		}
+		if(priority.isNull())
+		{
+			priority = "";
+		}
+		success_card = {"text":"Work package updated successfully\n(Tap the card to view package details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"},"slides":{{"type":"table","title":subject,"data":{"headers":{"Id","Subject","Description","Created\n At","Updated At","Percentage Done","Ignore non working days","Type","Priority","Project","Project Phase","Start Date","Due Date","Completion Date","Parent Work Package","Status","Author","Assignee"},"rows":{{"Id":id,"Subject":subject,"Description":desc,"Created\n At":createdate1,"Updated At":update1,"Percentage Done":per + "%","Ignore non working days":ig.get(ignore),"Type":type,"Priority":priority,"Project":project,"Project Phase":project_phase_def,"Start Date":start_date1,"Due Date":due_date1,"Completion Date":comp_date1,"Parent Work Package":parent,"Status":status,"Author":author,"Assignee":assignee}}}}}};
+		return success_card;
+	}
+}
+return response;

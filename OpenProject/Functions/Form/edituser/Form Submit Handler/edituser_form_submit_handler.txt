@@ -1,0 +1,391 @@
+
+response = Map();
+formValues = form.get("values");
+info formValues;
+filter = formValues.get("filter");
+/////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+/////////////////////////////////////////////////////////
+view_content = list();
+check = false;
+ad_map = Map();
+ad_map.put(true,"Yes");
+ad_map.put(false,"No");
+if(filter.isEmpty())
+{
+	ad_map = Map();
+	ad_map.put(true,"Yes");
+	ad_map.put(false,"No");
+	no_filter = {"text":"No filters applied","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+	return no_filter;
+}
+else
+{
+	if(filter.get("label").equals("All"))
+	{
+		all_response = invokeurl
+		[
+			url :instance_url + "api/v3/users?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		content = all_response.getFileContent().get("_embedded").get("elements");
+		for each  val in content
+		{
+			column = Map();
+			column.put("Id",val.get("id"));
+			column.put("Name",val.get("name"));
+			column.put("Email",val.get("email"));
+			column.put("Admin",ad_map.get(val.get("admin")));
+			column.put("Update","[Update   #" + val.get("id") + "](invoke.function|authorize)");
+			view_content.add(column);
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to edit filtered user details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":"User - Edit","data":{"headers":{"Id","Name","Email","Admin","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Name"))
+	{
+		title = formValues.get("name").get("label");
+		name_response = invokeurl
+		[
+			url :instance_url + "api/v3/users?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		content = name_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.get("name").equals(title))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				column.put("Name",val.get("name"));
+				column.put("Email",val.get("email"));
+				column.put("Admin",ad_map.get(val.get("admin")));
+				column.put("Update","[Update   #" + val.get("id") + "](invoke.function|authorize)");
+				view_content.add(column);
+				count = count + 1;
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to edit filtered user details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":"User - Edit","data":{"headers":{"Id","Name","Email","Admin","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Email"))
+	{
+		title = formValues.get("email").get("label");
+		name_response = invokeurl
+		[
+			url :instance_url + "api/v3/users?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		content = name_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.get("email").equals(title))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				column.put("Name",val.get("name"));
+				column.put("Email",val.get("email"));
+				column.put("Admin",ad_map.get(val.get("admin")));
+				column.put("Update","[Update   #" + val.get("id") + "](invoke.function|authorize)");
+				view_content.add(column);
+				count = count + 1;
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to edit filtered user details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":"User - Edit","data":{"headers":{"Id","Name","Email","Admin","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Created On"))
+	{
+		create_date = formValues.get("created_on");
+		date_response = invokeurl
+		[
+			url :instance_url + "api/v3/users?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		content = date_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("createdAt") && !val.get("createdAt").isNull())
+			{
+				mod_createdAt = val.get("createdAt").subString(0,10);
+				if(mod_createdAt.equals(create_date))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					column.put("Email",val.get("email"));
+					column.put("Admin",ad_map.get(val.get("admin")));
+					column.put("Update","[Update   #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to edit filtered user details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":"User - Edit","data":{"headers":{"Id","Name","Email","Admin","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Updated On"))
+	{
+		update_date = formValues.get("updated_on");
+		date_response = invokeurl
+		[
+			url :instance_url + "api/v3/users?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		content = date_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("updatedAt") && !val.get("updatedAt").isNull())
+			{
+				mod_updatedAt = val.get("updatedAt").subString(0,10);
+				if(mod_updatedAt.equals(update_date))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					column.put("Email",val.get("email"));
+					column.put("Admin",ad_map.get(val.get("admin")));
+					column.put("Update","[Update   #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to edit filtered user details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":"User - Edit","data":{"headers":{"Id","Name","Email","Admin","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Admin (True)"))
+	{
+		admin = formValues.get("admin");
+		admin_response = invokeurl
+		[
+			url :instance_url + "api/v3/users?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		content = admin_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("admin") && !val.get("admin").isNull())
+			{
+				if(val.get("admin").equals(true))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					column.put("Email",val.get("email"));
+					column.put("Admin",ad_map.get(val.get("admin")));
+					column.put("Update","[Update   #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to edit filtered user details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":"User - Edit","data":{"headers":{"Id","Name","Email","Admin","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Admin (False)"))
+	{
+		admin = formValues.get("admin");
+		admin_response = invokeurl
+		[
+			url :instance_url + "api/v3/users?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		content = admin_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("admin") && !val.get("admin").isNull())
+			{
+				if(val.get("admin").equals(false))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					column.put("Email",val.get("email"));
+					column.put("Admin",ad_map.get(val.get("admin")));
+					column.put("Update","[Update   #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to edit filtered user details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":"User - Edit","data":{"headers":{"Id","Name","Email","Admin","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	if(filter.get("label").equals("Status (Active)"))
+	{
+		status = formValues.get("status");
+		admin_response = invokeurl
+		[
+			url :instance_url + "api/v3/users?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		content = admin_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("status") && !val.get("status").isNull())
+			{
+				if(val.get("status").equals("active"))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					column.put("Email",val.get("email"));
+					column.put("Admin",ad_map.get(val.get("admin")));
+					column.put("Update","[Update   #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to edit filtered user details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":"User - Edit","data":{"headers":{"Id","Name","Email","Admin","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	if(filter.get("label").equals("Status (Invited)"))
+	{
+		status = formValues.get("status");
+		admin_response = invokeurl
+		[
+			url :instance_url + "api/v3/users?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		content = admin_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("status") && !val.get("status").isNull())
+			{
+				if(val.get("status").equals("invited"))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					column.put("Email",val.get("email"));
+					column.put("Admin",ad_map.get(val.get("admin")));
+					column.put("Update","[Update   #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to edit filtered user details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":"User - Edit","data":{"headers":{"Id","Name","Email","Admin","Update"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	if(check)
+	{
+		empty = {"text":"No users found for the given filter","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+		return empty;
+	}
+}
+return response;

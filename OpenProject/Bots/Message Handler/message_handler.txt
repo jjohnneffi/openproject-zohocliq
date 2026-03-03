@@ -1,0 +1,28 @@
+
+response = Map();
+if(message.containsIgnoreCase("HELLO") || message.containsIgnoreCase("HI") || message.containsIgnoreCase("HEY"))
+{
+	card = {"text":"Hello *" + user.get("first_name") + "* ! Before dive in, check out the options below. Make sure your extension is properly configured, or tap Help to get a quick gist of what this extension can do. ","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"theme":"modern-inline"},"buttons":{{"label":"Configure","hint":"Ensure that your extension is properly configured","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"configure"},{"label":"Help","hint":"To know about this extension","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"help"}}};
+	return card;
+}
+else if(!message.contains("openproject.org"))
+{
+	text = "Messaging me for the first time? Come say a Hi !";
+}
+// else if(message.equals("I am great!"))
+// {
+// 	text = "Glad to hear that! :smile:";
+// }
+// else if(message.equals("Meh!"))
+// {
+// 	text = "Oops! Don't you worry. Your day is definitely going to get better. :grinning:";
+// }
+// else if(message.containsIgnoreCase("ticket"))
+// {
+// 	//Try this case with the context handler. 
+// 	text = "Welcome to the Zylker Ticket Booking Portal! I'll need a few details to book the ticket.";
+// 	context = {"id":"personal_details","timeout":"300","params":{{"name":"name","question":"Please enter your name."},{"name":"age","question":"How old are you? :smile:"},{"name":"sex","question":"Gender:","suggestions":{"list":{{"text":"Male"},{"text":"Female"}}}}}};
+// 	response.put("context",context);
+// }
+response.put("text",text);
+return response;

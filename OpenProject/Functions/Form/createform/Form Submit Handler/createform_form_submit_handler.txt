@@ -1,0 +1,1613 @@
+
+response = Map();
+formValues = form.get("values");
+///////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+///////////////////////////////////////////////////////////////////
+if(form.get("name").startsWith("notify_#channel"))
+{
+	response = Map();
+	formValues = form.get("values");
+	info formValues;
+	info user;
+	record_id = user.get("zoho_user_id");
+	query_map = Map();
+	criteria_string = "userid==" + record_id;
+	query_map.put("criteria",criteria_string);
+	response_map = zoho.cliq.getRecords("notificationsdb",query_map);
+	record_id = 0;
+	info response_map;
+	if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+	{
+		project_label = formValues.get("project_notify").get("label");
+		project_value = formValues.get("project_notify").get("value");
+		channel_label = formValues.get("channel_notify").get("label");
+		channel_value = formValues.get("channel_notify").get("value");
+		query_map = Map();
+		zoho_userid = user.get("zoho_user_id");
+		criteria_string = "userid==" + zoho_userid;
+		query_map.put("criteria",criteria_string);
+		response_map = zoho.cliq.getRecords("notificationsdb",query_map);
+		record_id = 0;
+		if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+		{
+			zapi_key = response_map.get("list").get(0).get("zapikey");
+		}
+		//https://cliq.zoho.com/api/v2/applications/2305843009213702014/incoming?appkey=sbx-ODA2My03YTgzZDI3NS03NGVkLTQ1NzUtOGFiZi00N2M4NmQxNjA4MmI=
+		app_id = "2305843009213702014";
+		app_key = "sbx-ODA2My03YTgzZDI3NS03NGVkLTQ1NzUtOGFiZi00N2M4NmQxNjA4MmI=";
+		// project:updated, project:created, work_package:updated, work_package:created, work_package_comment:comment, work_package_comment:internal_comment, time_entry:created, attachment:created
+		param = {"url":"https://cliq.zoho.com/api/v2/applications/" + app_id + "/incoming?appkey=" + app_key + "&zapikey=" + zapi_key,"all":true,"project:updated":true,"project_created":true,"work_package:updated":true,"work_package:created":true,"work_package_comment:comment":true,"work_package_comment:internal_comment":true,"time_entry:created":true,"attachment:created":true};
+		createWebhook = invokeurl
+		[
+			url :instance_url + "api/v3/projects/" + project_value
+			type :POST
+			parameters:param.toString()
+			headers:{"content-type":"application/json"}
+			connection:"openproject"
+		];
+		info createWebhook.getFileContent();
+		brief = createWebhook.getFileContent();
+		values_map = Map();
+		values_map.put("channeluniquename",channel_value);
+		values_map.put("channelname",channel_label);
+		values_map.put("projectname",project_label);
+		values_map.put("projectid",project_value);
+		info user;
+		zoho_userid = user.get("zoho_user_id");
+		query_map = Map();
+		criteria_string = "userid==" + zoho_userid;
+		query_map.put("criteria",criteria_string);
+		response_map = zoho.cliq.getRecords("notificationsdb",query_map);
+		record_id = 0;
+		if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+		{
+			record_id = response_map.get("list").get(0).get("id");
+		}
+		if(record_id.length() > 0)
+		{
+			response_map = zoho.cliq.updateRecord("notificationsdb",record_id,values_map);
+		}
+		msg_card = {"text":project_label + " notifications are now available in the " + channel_label + " channel","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"}};
+		msg_content = {"text":"All " + project_label + "-related notifications from OpenProject will be posted in this channel","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2039/2039001.png","theme":"prompt"}};
+		channel_list = invokeurl
+		[
+			url :"https://cliq.zoho.com/api/v2/channelsbyname/" + channel_value + "/message"
+			type :POST
+			parameters:msg_content.toString()
+			headers:{"content-type":"application/json"}
+			connection:"zohocliq"
+		];
+		info channel_list;
+		return msg_card;
+	}
+	else
+	{
+		response = Map();
+		zoho_userid = user.get("zoho_user_id");
+		values_map = Map();
+		values_map.put("userid",zoho_userid);
+		response_map = zoho.cliq.createRecord("notificationsdb",values_map);
+		project_label = formValues.get("project_notify").get("label");
+		project_value = formValues.get("project_notify").get("value");
+		channel_label = formValues.get("channel_notify").get("label");
+		channel_value = formValues.get("channel_notify").get("value");
+		project_value = formValues.get("project_notify").get("value");
+		values_map = Map();
+		values_map.put("channeluniquename",channel_value);
+		values_map.put("channelname",channel_label);
+		values_map.put("projectname",project_label);
+		values_map.put("projectid",project_value);
+		info user;
+		zoho_userid = user.get("zoho_user_id");
+		query_map = Map();
+		criteria_string = "userid==" + zoho_userid;
+		query_map.put("criteria",criteria_string);
+		response_map = zoho.cliq.getRecords("notificationsdb",query_map);
+		record_id = 0;
+		if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+		{
+			record_id = response_map.get("list").get(0).get("id");
+		}
+		if(record_id.length() > 0)
+		{
+			response_map = zoho.cliq.updateRecord("notificationsdb",record_id,values_map);
+		}
+		response = {"text":"Connect to OpenProject to receive in-app notifications for the selected project in the selected channel","buttons":{{"label":"Connect","type":"+","action":{"type":"invoke.function","data":{"name":"authenticate"},"confirm":{"title":"Allow access to your OpenProject notifications through webhooks","description":"Connect to OpenProject from within Cliq","input":{"type":"user_webhook_token"}}}}}};
+		return response;
+	}
+	// 	query_map = Map(); 
+	// 	zoho_userid = user.get("zoho_user_id"); 
+	// criteria_string="userid==" + zoho_userid; 
+	// query_map.put("criteria",criteria_string); 
+	// response_map=zoho.cliq.getRecords("notificationsdb", query_map); 
+	// record_id=0; 
+	// if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size()>0){ 
+	//     record_id=response_map.get("list").get(0).get("id"); 
+	// } 
+	// if(record_id.length() > 0){ 
+	//     zoho.cliq.deleteRecord("notificationsdb", record_id); 
+	// } 
+}
+// 	token = response_map.get("list").get(0).get("zapikey");
+// 	project_label = formValues.get("project_notify").get("label");
+// 	project_value = formValues.get("project_notify").get("value");
+// 	channel_label = formValues.get("channel_notify").get("label");
+// 	channel_value = formValues.get("channel_notify").get("value");
+// 	project_value = formValues.get("project_notify").get("value");
+// 	//https://cliq.zoho.com/api/v2/applications/2305843009213702014/incoming?appkey=sbx-ODA2My03YTgzZDI3NS03NGVkLTQ1NzUtOGFiZi00N2M4NmQxNjA4MmI=
+// 	app_id = "2305843009213702014";
+// 	app_key = "sbx-ODA2My03YTgzZDI3NS03NGVkLTQ1NzUtOGFiZi00N2M4NmQxNjA4MmI=";
+// 	// project:updated, project:created, work_package:updated, work_package:created, work_package_comment:comment, work_package_comment:internal_comment, time_entry:created, attachment:created
+// 	param = {"url":"https://cliq.zoho.com/api/v2/applications/" + app_id + "/incoming?appkey=" + app_key + "&zapikey=" + token,"all":true,"project:updated":true,"project_created":true,"work_package:updated":true,"work_package:created":true,"work_package_comment:comment":true,"work_package_comment:internal_comment":true,"time_entry:created":true,"attachment:created":true};
+// 	createWebhook = invokeurl
+// 	[
+// 		url :instance_url + "api/v3/projects/" + project_value
+// 		type :POST
+// 		parameters:param.toString()
+// 		headers:{"content-type":"application/json"}
+// 		connection:"openproject"
+// 	];
+// 	info createWebhook.getFileContent();
+// 	brief = createWebhook.getFileContent();
+// 	// 		if(brief.contains("_type") && brief.get("_type").equals("Error"))
+// 	// 		{
+// 	// 			error_content = {"urn:openproject-org:api:v3:errors:NotFound":"The requested resource could not be found.","urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+// 	// 			add_data = "";
+// 	// 			add_details = "";
+// 	// 			if(brief.containsIgnoreCase("_embedded"))
+// 	// 			{
+// 	// 				cont = 1;
+// 	// 				add_data = "\n";
+// 	// 				add_details = "\n";
+// 	// 				details = brief.get("_embedded").get("errors");
+// 	// 				for each  val in details
+// 	// 				{
+// 	// 					add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+// 	// 					add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+// 	// 					cont = cont + 1;
+// 	// 				}
+// 	// 			}
+// 	// 			error_card = {"text":"Authentication for in-app notifications failed due to an error" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":brief.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(brief.get("errorIdentifier")) + "\n(Error Identifier: " + brief.get("errorIdentifier") + ")" + add_details}}};
+// 	// 			return error_card;
+// 	// 		}
+// 	msg_card = {"text":project_label + " notifications are now available in the " + channel_label + " channel","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"}};
+// 	values_map = Map();
+// 	values_map.put("channeluniquename",channel_value);
+// 	values_map.put("channelname",channel_label);
+// 	values_map.put("projectname",project_label);
+// 	values_map.put("projectid",project_value);
+// 	info user;
+// 	zoho_userid = user.get("zoho_user_id");
+// 	query_map = Map();
+// 	criteria_string = "userid==" + zoho_userid;
+// 	query_map.put("criteria",criteria_string);
+// 	response_map = zoho.cliq.getRecords("notificationsdb",query_map);
+// 	record_id = 0;
+// 	if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+// 	{
+// 		record_id = response_map.get("list").get(0).get("id");
+// 	}
+// 	if(record_id.length() > 0)
+// 	{
+// 		response_map = zoho.cliq.updateRecord("notificationsdb",record_id,values_map);
+// 	}
+// 	msg_content = {"text":"All " + project_label + "-related notifications from OpenProject will be posted in this channel","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2039/2039001.png","theme":"prompt"}};
+// 	channel_list = invokeurl
+// 	[
+// 		url :"https://cliq.zoho.com/api/v2/channelsbyname/" + channel_value + "/message"
+// 		type :POST
+// 		parameters:msg_content.toString()
+// 		headers:{"content-type":"application/json"}
+// 		connection:"zohocliq"
+// 	];
+// 	info channel_list;
+// 	return msg_card;
+// 	// 	Record Deletion - Testing 	
+// 	// 	query_map = Map(); 
+// 	// 	zoho_userid = user.get("zoho_user_id");
+// 	// 	criteria_string="userid==" + zoho_userid; 
+// 	// 	query_map.put("criteria",criteria_string); 
+// 	// 	response_map=zoho.cliq.getRecords("notificationsdb", query_map); 
+// 	// 	record_id=0; 
+// 	// 	if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size()>0){ 
+// 	// 	    record_id=response_map.get("list").get(0).get("id"); 
+// 	// 	} 
+// 	// 	if(record_id.length() > 0){ 
+// 	// 	    zoho.cliq.deleteRecord("notificationsdb", record_id); 
+// 	// 	} 
+if(form.get("name").startsWith("createnews###"))
+{
+	response = Map();
+	formValues = form.get("values");
+	info formValues;
+	summary = formValues.get("summary");
+	description = formValues.get("description");
+	project_name = formValues.get("project").get("label");
+	project_id = formValues.get("project").get("value");
+	title = formValues.get("title");
+	news_map = {"title":title,"summary":summary,"description":{"raw":description},"_links":{"project":{"href":"/api/v3/projects/" + project_id}}};
+	news_post = invokeurl
+	[
+		url :instance_url + "api/v3/news"
+		type :POST
+		parameters:news_map.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = news_post.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while creating the news"};
+		return error_banner;
+	}
+	else if(content.get("_type").equals("News"))
+	{
+		success_banner = {"type":"banner","status":"success","text":"News created for the project (# " + project_id + ")"};
+		return success_banner;
+	}
+	return response;
+}
+if(form.get("name").startsWith("createnews#"))
+{
+	news_id = form.get("name").subString(11);
+	summary = formValues.get("summary");
+	description = formValues.get("description");
+	title = formValues.get("title");
+	news_map = {"title":title,"summary":summary,"description":{"raw":description},"_links":{"project":{"href":"/api/v3/projects/" + news_id}}};
+	news_post = invokeurl
+	[
+		url :instance_url + "api/v3/news"
+		type :POST
+		parameters:news_map.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = news_post.getFileContent();
+	info content;
+	if(content.get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while creating the news"};
+		return error_banner;
+	}
+	else if(content.get("_type").equals("News"))
+	{
+		success_banner = {"type":"banner","status":"success","text":"News created for the project (# " + news_id + ")"};
+		return success_banner;
+	}
+}
+if(form.get("name").startsWith("post_comment#"))
+{
+	com_id = form.get("name").subString(13);
+	formValues = form.get("values");
+	info formValues;
+	comment = "";
+	if(!formValues.get("comment").isEmpty() && !formValues.get("comment").isNull() && !formValues.get("comment").equals(""))
+	{
+		comment = formValues.get("comment");
+	}
+	packageMap = {"comment":{"raw":comment}};
+	comment_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + com_id + "/activities"
+		type :POST
+		parameters:packageMap.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = comment_response.getFileContent();
+	info content;
+	if(content.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while commenting the work package"};
+		return error_banner;
+	}
+	else if(content.get("_type").equals("Activity::Comment"))
+	{
+		success_banner = {"type":"banner","status":"success","text":"Comment has been added to the work package (# " + com_id + ")"};
+		return success_banner;
+	}
+}
+if(form.get("name").startsWith("reminders#"))
+{
+	response = Map();
+	formValues = form.get("values");
+	info formValues;
+	note = formValues.get("note");
+	pack_id = form.get("name").subString(10);
+	datetime = formValues.get("remindat").get("date_time");
+	time_zone = formValues.get("remindat").get("time_zone_id");
+	datetime_obj = toDateTime(datetime,"yyyy-MM-dd'T'HH:mm",time_zone);
+	india_tz = "Asia/Kolkata";
+	india_time = datetime_obj.toString("yyyy-MM-dd'T'HH:mm",india_tz);
+	info india_time;
+	content = {"note":note,"remindAt":india_time};
+	rem_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + pack_id + "/reminders"
+		type :POST
+		parameters:content.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	rem_content = rem_response.getFileContent();
+	view_content = List();
+	if(rem_content.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while creating the reminder"};
+		return error_banner;
+	}
+	else if(rem_content.get("_type").equals("Reminder"))
+	{
+		package = rem_content.get("_embedded").get("remindable");
+		success_banner = {"type":"banner","status":"success","text":"Reminder for the work package (# " + package.get("id") + ") has been created successfully"};
+		return success_banner;
+	}
+	return response;
+}
+if(form.get("name").equals("add_user#"))
+{
+	response = Map();
+	formValues = form.get("values");
+	info formValues;
+	firstName = formValues.get("firstName");
+	lastName = formValues.get("lastName");
+	email = formValues.get("email");
+	admin = formValues.get("admin");
+	status = formValues.get("status").get("label").toLowerCase();
+	if(formValues.get("status").get("label").equalsIgnoreCase("Active"))
+	{
+		login = formValues.get("login");
+		password = formValues.get("password");
+		active_map = {"firstName":firstName,"lastName":lastName,"email":email,"admin":admin,"status":status,"login":login,"password":password,"language":"en"};
+		active_response = invokeurl
+		[
+			url :instance_url + "api/v3/users"
+			type :POST
+			parameters:active_map.toString()
+			headers:{"content-type":"application/json"}
+			connection:"openproject"
+		];
+		content = active_response.getFileContent();
+		if(content.get("_type").equals("User"))
+		{
+			success_banner = {"type":"banner","status":"success","text":"User " + "(#" + content.get("id") + ") has been created successfully"};
+			return success_banner;
+		}
+		else if(content.get("_type").equals("Error"))
+		{
+			error_banner = {"type":"banner","status":"failure","text":"Error occured while creating the user"};
+			return error_banner;
+		}
+	}
+	if(formValues.get("status").get("label").equalsIgnoreCase("Invited"))
+	{
+		invited_map = {"firstName":firstName,"lastName":lastName,"email":email,"admin":admin,"status":status,"language":"en"};
+		invited_response = invokeurl
+		[
+			url :instance_url + "api/v3/users"
+			type :POST
+			parameters:invited_map.toString()
+			headers:{"content-type":"application/json"}
+			connection:"openproject"
+		];
+		info invited_response.getFileContent();
+		content = invited_response.getFileContent();
+		if(content.get("_type").equals("User"))
+		{
+			success_banner = {"type":"banner","status":"success","text":"User " + "(#" + content.get("id") + ") has been created successfully"};
+			return success_banner;
+		}
+		else if(content.get("_type").equals("Error"))
+		{
+			error_banner = {"type":"banner","status":"failure","text":"Error occured while creating the user"};
+			return error_banner;
+		}
+	}
+	return response;
+}
+if(form.get("name").equals("create_project#"))
+{
+	name = formValues.get("name");
+	description = formValues.get("description");
+	active = formValues.get("active");
+	public = formValues.get("public");
+	status = formValues.get("status").get("label");
+	status_explanation = formValues.get("status_explanation");
+	parent = formValues.get("parent").get("label");
+	parent_title = null;
+	parent_href = null;
+	if(!parent.isNull())
+	{
+		available_parent = invokeurl
+		[
+			url :instance_url + "api/v3/projects/available_parent_projects"
+			type :GET
+			connection:"openproject"
+		];
+		parent_list = available_parent.getFileContent().get("_embedded").get("elements");
+		for each  value in parent_list
+		{
+			if(value.get("_links").get("self").get("title").equals(parent))
+			{
+				parent_title = value.get("_links").get("self").get("title");
+				parent_href = value.get("_links").get("self").get("href");
+			}
+		}
+	}
+	status_title = null;
+	status_href = null;
+	if(!status.isNull())
+	{
+		project = invokeurl
+		[
+			url :instance_url + "api/v3/projects/form"
+			type :POST
+			headers:{"content-type":"application/json"}
+			connection:"openproject"
+		];
+		status_list = project.getFileContent().get("_embedded").get("schema").get("status").get("_links").get("allowedValues");
+		for each  value in status_list
+		{
+			if(value.get("title").equals(status))
+			{
+				status_title = value.get("title");
+				status_href = value.get("href");
+			}
+		}
+	}
+	content = {"identifier":"","name":name,"active":active,"public":public,"description":{"format":"markdown","raw":description,"html":""},"statusExplanation":{"format":"markdown","raw":status_explanation,"html":""},"_links":{"parent":{"title":parent_title,"href":parent_href},"status":{"title":status_title,"href":status_href}}};
+	info content;
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	project_form = invokeurl
+	[
+		url :"https://openproject30.openproject.com/api/v3/projects"
+		type :POST
+		parameters:content.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	output = project_form.getFileContent();
+	info output;
+	if(output.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occured while creating the project"};
+		return error_banner;
+	}
+	else if(output.get("_type").equalsIgnoreCase("Project"))
+	{
+		success_banner = {"type":"banner","status":"success","text":"Project " + "(#" + output.get("id") + ") has been created successfully"};
+		return success_banner;
+	}
+}
+if(form.get("name").equals("create_workpackage#"))
+{
+	response = Map();
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	project_ids = Map();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+		project_ids.put(val.get("name"),val.get("id"));
+	}
+	// info projectid_list;
+	// info projectid_map;
+	// Project Ids
+	type_response = invokeurl
+	[
+		url :instance_url + "api/v3/types"
+		type :GET
+		connection:"openproject"
+	];
+	typeid_map = Map();
+	typeid_content = type_response.getFileContent().get("_embedded").get("elements");
+	for each  val in typeid_content
+	{
+		typeid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info typeid_map;
+	// Type Ids
+	// info categoryid;
+	// Category Id
+	priority_response = invokeurl
+	[
+		url :instance_url + "api/v3/priorities"
+		type :GET
+		connection:"openproject"
+	];
+	priorityid_map = Map();
+	priorityid_content = priority_response.getFileContent().get("_embedded").get("elements");
+	for each  val in priorityid_content
+	{
+		priorityid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info priorityid_map;
+	// Priority Ids
+	projectphase_definitions_response = invokeurl
+	[
+		url :instance_url + "api/v3/project_phase_definitions"
+		type :GET
+		connection:"openproject"
+	];
+	projectphase_definitions_map = Map();
+	projectphase_definitions_content = projectphase_definitions_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectphase_definitions_content
+	{
+		projectphase_definitions_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info projectphase_definitions_map;
+	// Project Phase Definition Ids
+	status_response = invokeurl
+	[
+		url :instance_url + "api/v3/statuses"
+		type :GET
+		connection:"openproject"
+	];
+	status_map = Map();
+	status_content = status_response.getFileContent().get("_embedded").get("elements");
+	for each  val in status_content
+	{
+		status_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info status_map;
+	// Status Ids
+	assignee_response = invokeurl
+	[
+		url :instance_url + "api/v3/users?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	assignee_map = Map();
+	assignee_content = assignee_response.getFileContent().get("_embedded").get("elements");
+	for each  val in assignee_content
+	{
+		assignee_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info assignee_map;
+	// Assignee Ids
+	parent_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent_map = Map();
+	parent_list = List();
+	parent_content = parent_response.getFileContent().get("_embedded").get("elements");
+	for each  val in parent_content
+	{
+		if(!val.get("_links").get("type").get("title").equals("Milestone"))
+		{
+			parent_type = val.get("_links").get("self").get("title") + " (" + val.get("_links").get("type").get("title") + ")";
+			parent_map.put(parent_type,val.get("_links").get("self").get("href"));
+			parent_list.add(parent_type);
+		}
+	}
+	formValues = form.get("values");
+	info formValues;
+	subject = formValues.get("subject");
+	description = formValues.get("description");
+	percent = formValues.get("percentage_done");
+	ignore_days = formValues.get("ignore_days");
+	type = formValues.get("type").get("label");
+	priority = formValues.get("priority").get("label");
+	project = formValues.get("project").get("label");
+	projectids = project_ids.get(project);
+	category_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + projectids + "/categories"
+		type :GET
+		connection:"openproject"
+	];
+	category_id = null;
+	if(category_response.getFileContent().get("_embedded").get("elements").length() != 0)
+	{
+		category_id = category_response.getFileContent().get("_embedded").get("elements").get(0).get("_links").get("self").get("href");
+	}
+	parent = formValues.get("parent").get("label");
+	status = formValues.get("status").get("label");
+	assignee = formValues.get("assignee").get("label");
+	projectphase = formValues.get("project_phase").get("label");
+	start_date = formValues.get("start_date");
+	due_date = formValues.get("due_date");
+	comp_date = formValues.get("comp_date");
+	if(comp_date.isNull())
+	{
+		comp_date = null;
+	}
+	if(start_date.isNull())
+	{
+		start_date = null;
+	}
+	if(due_date.isNull())
+	{
+		due_date = null;
+	}
+	if(!parent.isNull())
+	{
+		parent_index = parent.indexOf("(");
+		new_parent = parent.subString(0,parent_index - 1);
+	}
+	else
+	{
+		new_parent = null;
+	}
+	if(!projectphase.isNull())
+	{
+		phase_def_href = projectphase_definitions_map.get(projectphase);
+		phase_href = phase_def_href.subString(0,21) + phase_def_href.subString(32,phase_def_href.length());
+		phase_title = projectphase;
+	}
+	else
+	{
+		phase_href = null;
+		phase_def_href = null;
+		phase_title = null;
+	}
+	if(type.equalsIgnoreCase("Milestone"))
+	{
+		packageMap = {"subject":subject,"description":{"format":"markdown","raw":description,"html":""},"scheduleManually":true,"date":comp_date,"ignoreNonWorkingDays":ignore_days,"percentageDone":percent,"_links":{"category":{"href":category_id},"type":{"href":typeid_map.get(type),"title":type},"priority":{"href":priorityid_map.get(priority),"title":priority},"project":{"href":projectid_map.get(project),"title":project},"projectPhase":{"href":phase_href,"title":phase_title},"projectPhaseDefinition":{"href":phase_def_href,"title":phase_title},"status":{"href":status_map.get(status),"title":status},"responsible":{"href":assignee_map.get(assignee)},"assignee":{"href":assignee_map.get(assignee)},"version":{"href":null},"parent":{"href":parent_map.get(parent),"title":new_parent}}};
+	}
+	else
+	{
+		packageMap = {"subject":subject,"description":{"format":"markdown","raw":description,"html":""},"scheduleManually":true,"startDate":start_date,"dueDate":due_date,"ignoreNonWorkingDays":ignore_days,"percentageDone":percent,"_links":{"category":{"href":category_id},"type":{"href":typeid_map.get(type),"title":type},"priority":{"href":priorityid_map.get(priority),"title":priority},"project":{"href":projectid_map.get(project),"title":project},"projectPhase":{"href":phase_href,"title":phase_title},"projectPhaseDefinition":{"href":phase_def_href,"title":phase_title},"status":{"href":status_map.get(status),"title":status},"responsible":{"href":assignee_map.get(assignee)},"assignee":{"href":assignee_map.get(assignee)},"version":{"href":null},"parent":{"href":parent_map.get(parent),"title":new_parent}}};
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	workpackage_form = invokeurl
+	[
+		url :"https://openproject30.openproject.com/api/v3/work_packages"
+		type :POST
+		parameters:packageMap.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	content = workpackage_form.getFileContent();
+	info content;
+	if(content.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occured while creating the work package"};
+		return error_banner;
+	}
+	else if(workpackage_form.getFileContent().get("_type").equalsIgnoreCase("WorkPackage"))
+	{
+		success_banner = {"type":"banner","status":"success","text":"Work Package " + "(#" + content.get("id") + ") has been created successfully"};
+		return success_banner;
+	}
+}
+if(form.get("name").equals("packcomment"))
+{
+	formValues = form.get("values");
+	info formValues;
+	view_content1 = List();
+	view_content2 = List();
+	workpackage_name = formValues.get("workpackage").get("label");
+	workpackage_id = formValues.get("workpackage").get("value");
+	details_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + workpackage_id + "/activities"
+		type :GET
+		connection:"openproject"
+	];
+	desc = details_response.getFileContent();
+	if(desc.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(desc.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = desc.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while viewing the work package activities" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":desc.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(desc.get("errorIdentifier")) + "\n(Error Identifier: " + desc.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	if(desc.get("_type").equals("Collection"))
+	{
+		content = details_response.getFileContent().get("_embedded").get("elements");
+		for each  val in content
+		{
+			column1 = Map();
+			column2 = Map();
+			if(val.get("_type").equals("Activity"))
+			{
+				activity_id = val.get("id");
+				raw = val.get("comment").get("raw");
+				column1.put("Activity Id",activity_id);
+				if(raw.isNull() || raw.isEmpty() || raw.equals(""))
+				{
+					column1.put("Comment","No comment found");
+				}
+				else
+				{
+					column1.put("Comment",raw);
+				}
+				column1.put("Details","[Details  #" + workpackage_id + " #" + activity_id + "](invoke.function|authorize)");
+				view_content1.add(column1);
+			}
+			if(val.get("_type").equals("Activity::Comment"))
+			{
+				comment_id = val.get("id");
+				raw = val.get("comment").get("raw");
+				column2.put("Comment Id",comment_id);
+				if(raw.isNull() || raw.isEmpty() || raw.equals(""))
+				{
+					column2.put("Comment","No comment found");
+				}
+				else
+				{
+					column2.put("Comment",raw);
+				}
+				column2.put("Details","[Details   #" + workpackage_id + " #" + comment_id + "](invoke.function|authorize)");
+				view_content2.add(column2);
+			}
+		}
+		if(view_content2.length() == 0)
+		{
+			package_list = {"text":"Click to view work package activities","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Activity","data":{"headers":{"Activity Id","Comment","Details"},"rows":view_content1}},{"type":"text","title":"Work Package - Activity::Comment","data":"No Activity::Comment found"}}};
+			return package_list;
+		}
+		else if(view_content1.length() == 0)
+		{
+			package_list = {"text":"Click to view work package activities","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"text","title":"Activity","data":"No Activity found"},{"type":"table","title":"Work Package - Activity::Comment","data":{"headers":{"Comment Id","Comment","Details"},"rows":view_content2}}}};
+			return package_list;
+		}
+		else if(view_content1.length() == 0 && view_content2.length() == 0)
+		{
+			empty = {"text":"No activity found for the given work package","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+			return empty;
+		}
+		else if(view_content1.length() > 0 && view_content2.length() > 0)
+		{
+			package_list = {"text":"Click to view work package activities","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Work Package - Activity","data":{"headers":{"Activity Id","Comment","Details"},"rows":view_content1}},{"type":"table","title":"Work Package - Activity::Comment","data":{"headers":{"Comment Id","Comment","Details"},"rows":view_content2}}}};
+			return package_list;
+		}
+	}
+}
+if(form.get("name").equals("post_comment"))
+{
+	formValues = form.get("values");
+	info formValues;
+	comment = "";
+	subject = "";
+	if(!formValues.get("comment").isEmpty() && !formValues.get("comment").isNull() && !formValues.get("comment").equals(""))
+	{
+		comment = formValues.get("comment");
+	}
+	if(!formValues.get("subject").isEmpty() && !formValues.get("subject").isNull())
+	{
+		subject_name = formValues.get("subject").get("label");
+		subject_id = formValues.get("subject").get("value");
+	}
+	packageMap = {"comment":{"raw":comment}};
+	comment_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + subject_id + "/activities"
+		type :POST
+		parameters:packageMap.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = comment_response.getFileContent();
+	info content;
+	if(content.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while commenting the work package" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(content.get("_type").equals("Activity::Comment"))
+	{
+		view_content = List();
+		column = Map();
+		comment_id = content.get("id");
+		comment = content.get("comment").get("raw");
+		column.put("Comment Id",comment_id);
+		column.put("Comment",comment);
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		column.put("Created At",createdate1);
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		column.put("Updated At",update1);
+		column.put("Work Package Id",subject_id);
+		column.put("Work Package Name",subject_name);
+		view_content.add(column);
+		success_card = {"text":"Comment has been added to the work package successfully\n(Tap the card to view details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"},"slides":{{"type":"table","title":"Comment Details","data":{"headers":{"Comment Id","Comment","Created At","Updated At","Work Package Id","Work Package Name"},"rows":view_content}}}};
+		return success_card;
+	}
+}
+if(form.get("name").equals("create_workpackage"))
+{
+	response = Map();
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	project_ids = Map();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+		project_ids.put(val.get("name"),val.get("id"));
+	}
+	// info projectid_list;
+	// info projectid_map;
+	// Project Ids
+	type_response = invokeurl
+	[
+		url :instance_url + "api/v3/types"
+		type :GET
+		connection:"openproject"
+	];
+	typeid_map = Map();
+	typeid_content = type_response.getFileContent().get("_embedded").get("elements");
+	for each  val in typeid_content
+	{
+		typeid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info typeid_map;
+	// Type Ids
+	// info categoryid;
+	// Category Id
+	priority_response = invokeurl
+	[
+		url :instance_url + "api/v3/priorities"
+		type :GET
+		connection:"openproject"
+	];
+	priorityid_map = Map();
+	priorityid_content = priority_response.getFileContent().get("_embedded").get("elements");
+	for each  val in priorityid_content
+	{
+		priorityid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info priorityid_map;
+	// Priority Ids
+	projectphase_definitions_response = invokeurl
+	[
+		url :instance_url + "api/v3/project_phase_definitions"
+		type :GET
+		connection:"openproject"
+	];
+	projectphase_definitions_map = Map();
+	projectphase_definitions_content = projectphase_definitions_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectphase_definitions_content
+	{
+		projectphase_definitions_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info projectphase_definitions_map;
+	// Project Phase Definition Ids
+	status_response = invokeurl
+	[
+		url :instance_url + "api/v3/statuses"
+		type :GET
+		connection:"openproject"
+	];
+	status_map = Map();
+	status_content = status_response.getFileContent().get("_embedded").get("elements");
+	for each  val in status_content
+	{
+		status_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info status_map;
+	// Status Ids
+	assignee_response = invokeurl
+	[
+		url :instance_url + "api/v3/users?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	assignee_map = Map();
+	assignee_content = assignee_response.getFileContent().get("_embedded").get("elements");
+	for each  val in assignee_content
+	{
+		assignee_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+	}
+	// info assignee_map;
+	// Assignee Ids
+	parent_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent_map = Map();
+	parent_list = List();
+	parent_content = parent_response.getFileContent().get("_embedded").get("elements");
+	for each  val in parent_content
+	{
+		if(!val.get("_links").get("type").get("title").equals("Milestone"))
+		{
+			parent_type = val.get("_links").get("self").get("title") + " (" + val.get("_links").get("type").get("title") + ")";
+			parent_map.put(parent_type,val.get("_links").get("self").get("href"));
+			parent_list.add(parent_type);
+		}
+	}
+	formValues = form.get("values");
+	info formValues;
+	subject = formValues.get("subject");
+	description = formValues.get("description");
+	percent = formValues.get("percentage_done");
+	ignore_days = formValues.get("ignore_days");
+	type = formValues.get("type").get("label");
+	priority = formValues.get("priority").get("label");
+	project = formValues.get("project").get("label");
+	projectids = project_ids.get(project);
+	category_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + projectids + "/categories"
+		type :GET
+		connection:"openproject"
+	];
+	category_id = null;
+	if(category_response.getFileContent().get("_embedded").get("elements").length() != 0)
+	{
+		category_id = category_response.getFileContent().get("_embedded").get("elements").get(0).get("_links").get("self").get("href");
+	}
+	parent = formValues.get("parent").get("label");
+	status = formValues.get("status").get("label");
+	assignee = formValues.get("assignee").get("label");
+	projectphase = formValues.get("project_phase").get("label");
+	start_date = formValues.get("start_date");
+	due_date = formValues.get("due_date");
+	comp_date = formValues.get("comp_date");
+	if(comp_date.isNull())
+	{
+		comp_date = null;
+	}
+	if(start_date.isNull())
+	{
+		start_date = null;
+	}
+	if(due_date.isNull())
+	{
+		due_date = null;
+	}
+	if(!parent.isNull())
+	{
+		parent_index = parent.indexOf("(");
+		new_parent = parent.subString(0,parent_index - 1);
+	}
+	else
+	{
+		new_parent = null;
+	}
+	if(!projectphase.isNull())
+	{
+		phase_def_href = projectphase_definitions_map.get(projectphase);
+		phase_href = phase_def_href.subString(0,21) + phase_def_href.subString(32,phase_def_href.length());
+		phase_title = projectphase;
+	}
+	else
+	{
+		phase_href = null;
+		phase_def_href = null;
+		phase_title = null;
+	}
+	if(type.equalsIgnoreCase("Milestone"))
+	{
+		packageMap = {"subject":subject,"description":{"format":"markdown","raw":description,"html":""},"scheduleManually":true,"date":comp_date,"ignoreNonWorkingDays":ignore_days,"percentageDone":percent,"_links":{"category":{"href":category_id},"type":{"href":typeid_map.get(type),"title":type},"priority":{"href":priorityid_map.get(priority),"title":priority},"project":{"href":projectid_map.get(project),"title":project},"projectPhase":{"href":phase_href,"title":phase_title},"projectPhaseDefinition":{"href":phase_def_href,"title":phase_title},"status":{"href":status_map.get(status),"title":status},"responsible":{"href":assignee_map.get(assignee)},"assignee":{"href":assignee_map.get(assignee)},"version":{"href":null},"parent":{"href":parent_map.get(parent),"title":new_parent}}};
+	}
+	else
+	{
+		packageMap = {"subject":subject,"description":{"format":"markdown","raw":description,"html":""},"scheduleManually":true,"startDate":start_date,"dueDate":due_date,"ignoreNonWorkingDays":ignore_days,"percentageDone":percent,"_links":{"category":{"href":category_id},"type":{"href":typeid_map.get(type),"title":type},"priority":{"href":priorityid_map.get(priority),"title":priority},"project":{"href":projectid_map.get(project),"title":project},"projectPhase":{"href":phase_href,"title":phase_title},"projectPhaseDefinition":{"href":phase_def_href,"title":phase_title},"status":{"href":status_map.get(status),"title":status},"responsible":{"href":assignee_map.get(assignee)},"assignee":{"href":assignee_map.get(assignee)},"version":{"href":null},"parent":{"href":parent_map.get(parent),"title":new_parent}}};
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	workpackage_form = invokeurl
+	[
+		url :"https://openproject30.openproject.com/api/v3/work_packages"
+		type :POST
+		parameters:packageMap.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	content = workpackage_form.getFileContent();
+	info content;
+	if(content.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while creating the work package" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(workpackage_form.getFileContent().get("_type").equalsIgnoreCase("WorkPackage"))
+	{
+		id = content.get("id");
+		subject = content.get("subject");
+		description = content.get("description").get("raw");
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		percent = content.get("percentageDone");
+		ignore = content.get("ignoreNonWorkingDays");
+		type = content.get("_links").get("type").get("title");
+		priority = content.get("_links").get("priority").get("title");
+		project = content.get("_links").get("project").get("title");
+		status = content.get("_links").get("status").get("title");
+		assignee = content.get("_links").get("assignee").get("title");
+		author = content.get("_links").get("author").get("title");
+		parent = content.get("_links").get("parent").get("title");
+		project_phase_def = content.get("_links").get("projectPhaseDefinition").get("title");
+		if(content.get("startDate").isNull())
+		{
+			start_date1 = "";
+		}
+		else
+		{
+			start_date = content.get("startDate");
+			start_date1 = toDate(start_date,"yyyy-MM-dd");
+		}
+		if(content.get("dueDate").isNull())
+		{
+			due_date1 = "";
+		}
+		else
+		{
+			due_date = content.get("dueDate");
+			due_date1 = toDate(due_date,"yyyy-MM-dd");
+		}
+		if(content.get("date").isNull())
+		{
+			comp_date1 = "";
+		}
+		else
+		{
+			comp_date = content.get("date");
+			comp_date1 = toDate(comp_date,"yyyy-MM-dd");
+		}
+		ig = Map();
+		ig.put(true,"Yes");
+		ig.put(false,"No");
+		if(description.equals(""))
+		{
+			desc = "";
+		}
+		else
+		{
+			desc = description;
+		}
+		if(percent == null)
+		{
+			per = 0;
+		}
+		else
+		{
+			per = percent;
+		}
+		if(project_phase_def.isNull())
+		{
+			project_phase_def = "";
+		}
+		if(parent.isNull())
+		{
+			parent = "";
+		}
+		if(status.isNull())
+		{
+			status = "";
+		}
+		if(priority.isNull())
+		{
+			priority = "";
+		}
+		success_card = {"text":"Work package created successfully\n(Tap the card to view package details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"},"slides":{{"type":"table","title":subject,"data":{"headers":{"Id","Subject","Description","Created\n At","Updated At","Percentage Done","Ignore non working days","Type","Priority","Project","Project Phase","Start Date","Due Date","Completion Date","Parent Work Package","Status","Author","Assignee"},"rows":{{"Id":id,"Subject":subject,"Description":desc,"Created\n At":createdate1,"Updated At":update1,"Percentage Done":per + "%","Ignore non working days":ig.get(ignore),"Type":type,"Priority":priority,"Project":project,"Project Phase":project_phase_def,"Start Date":start_date1,"Due Date":due_date1,"Completion Date":comp_date1,"Parent Work Package":parent,"Status":status,"Author":author,"Assignee":assignee}}}}}};
+		return success_card;
+	}
+	return response;
+}
+if(form.get("name").equals("createnews"))
+{
+	response = Map();
+	formValues = form.get("values");
+	info formValues;
+	summary = formValues.get("summary");
+	description = formValues.get("description");
+	project_name = formValues.get("project").get("label");
+	project_id = formValues.get("project").get("value");
+	title = formValues.get("title");
+	news_map = {"title":title,"summary":summary,"description":{"raw":description},"_links":{"project":{"href":"/api/v3/projects/" + project_id}}};
+	news_post = invokeurl
+	[
+		url :instance_url + "api/v3/news"
+		type :POST
+		parameters:news_map.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = news_post.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while adding the news" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(content.get("_type").equals("News"))
+	{
+		view_content = List();
+		column = Map();
+		column.put("News Id",content.get("id"));
+		if(content.get("title").isNull() || content.get("title").equals(""))
+		{
+			column.put("News Title","-");
+			news_title = "-";
+		}
+		else
+		{
+			column.put("News Title",content.get("title"));
+			news_title = content.get("title");
+		}
+		if(content.get("summary").isNull() || content.get("summary").equals(""))
+		{
+			summary = "-";
+		}
+		else
+		{
+			summary = content.get("summary");
+		}
+		if(content.get("description").get("raw").isNull() || content.get("description").get("raw").equals(""))
+		{
+			description = "-";
+		}
+		else
+		{
+			description = content.get("description").get("raw");
+		}
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		column.put("Created At",createdate1);
+		column.put("Updated At",update1);
+		check = content.get("_links").get("project").get("href");
+		pos = check.lastIndexOf("/");
+		project_id = check.subString(pos + 1);
+		column.put("Project Id",project_id);
+		column.put("Project Name",content.get("_links").get("project").get("title"));
+		check1 = content.get("_links").get("author").get("href");
+		pos1 = check1.lastIndexOf("/");
+		author_id = check1.subString(pos1 + 1);
+		column.put("Author Id",author_id);
+		column.put("Author Name",content.get("_links").get("author").get("title"));
+		view_content.add(column);
+		success_card = {"text":"News created successfully\n(Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/7063/7063304.png","theme":"prompt"},"slides":{{"type":"label","title":"News Details","data":{{"Title":news_title},{"Summary":summary},{"Description":description}}},{"type":"table","title":"","data":{"headers":{"News Id","News Title","Created At","Updated At","Project Id","Project Name","Author Id","Author Name"},"rows":view_content}}}};
+		return success_card;
+	}
+	return response;
+}
+if(form.get("name").equals("create_project"))
+{
+	name = formValues.get("name");
+	description = formValues.get("description");
+	active = formValues.get("active");
+	public = formValues.get("public");
+	status = formValues.get("status").get("label");
+	status_explanation = formValues.get("status_explanation");
+	parent = formValues.get("parent").get("label");
+	parent_title = null;
+	parent_href = null;
+	if(!parent.isNull())
+	{
+		available_parent = invokeurl
+		[
+			url :instance_url + "api/v3/projects/available_parent_projects"
+			type :GET
+			connection:"openproject"
+		];
+		parent_list = available_parent.getFileContent().get("_embedded").get("elements");
+		for each  value in parent_list
+		{
+			if(value.get("_links").get("self").get("title").equals(parent))
+			{
+				parent_title = value.get("_links").get("self").get("title");
+				parent_href = value.get("_links").get("self").get("href");
+			}
+		}
+	}
+	status_title = null;
+	status_href = null;
+	if(!status.isNull())
+	{
+		project = invokeurl
+		[
+			url :instance_url + "api/v3/projects/form"
+			type :POST
+			headers:{"content-type":"application/json"}
+			connection:"openproject"
+		];
+		status_list = project.getFileContent().get("_embedded").get("schema").get("status").get("_links").get("allowedValues");
+		for each  value in status_list
+		{
+			if(value.get("title").equals(status))
+			{
+				status_title = value.get("title");
+				status_href = value.get("href");
+			}
+		}
+	}
+	content = {"identifier":"","name":name,"active":active,"public":public,"description":{"format":"markdown","raw":description,"html":""},"statusExplanation":{"format":"markdown","raw":status_explanation,"html":""},"_links":{"parent":{"title":parent_title,"href":parent_href},"status":{"title":status_title,"href":status_href}}};
+	info content;
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	project_form = invokeurl
+	[
+		url :"https://openproject30.openproject.com/api/v3/projects"
+		type :POST
+		parameters:content.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	output = project_form.getFileContent();
+	info output;
+	if(output.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(output.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = output.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while creating the project" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":output.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(output.get("errorIdentifier")) + "\n(Error Identifier: " + output.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(output.get("_type").equalsIgnoreCase("Project"))
+	{
+		id = output.get("id");
+		name = output.get("name");
+		identifier = output.get("identifier");
+		active = output.get("active");
+		if(active == true)
+		{
+			active = "Yes";
+		}
+		else if(active == false)
+		{
+			active = "No";
+		}
+		public = output.get("public");
+		if(public == true)
+		{
+			public = "Yes";
+		}
+		else if(public == false)
+		{
+			public = "No";
+		}
+		description = output.get("description").get("raw");
+		createdate = output.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = output.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		status_explanation = output.get("statusExplanation").get("raw");
+		status_check = output.get("_links").get("status").get("href");
+		status = "";
+		if(!status_check.isNull())
+		{
+			status = output.get("_links").get("status").get("title");
+		}
+		parent_check = output.get("_links").get("parent").get("href");
+		parent = "";
+		if(!parent_check.isNull())
+		{
+			parent = output.get("_links").get("parent").get("title");
+		}
+		success_card = {"text":"Project created successfully\n(Tap the card to view project details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"},"slides":{{"type":"table","title":name,"data":{"headers":{"Id","Name","Identifier","Description","Created\n At","Updated At","Active Project","Public Project","Status","Status Explanation","Parent Project"},"rows":{{"Id":id,"Name":name,"Identifier":identifier,"Description":description,"Created\n At":createdate1,"Updated At":update1,"Active Project":active,"Public Project":public,"Status":status,"Status Explanation":status_explanation,"Parent Project":parent}}}}}};
+		return success_card;
+	}
+}
+if(form.get("name").equals("add_user"))
+{
+	response = Map();
+	formValues = form.get("values");
+	info formValues;
+	firstName = formValues.get("firstName");
+	lastName = formValues.get("lastName");
+	email = formValues.get("email");
+	admin = formValues.get("admin");
+	status = formValues.get("status").get("label").toLowerCase();
+	if(formValues.get("status").get("label").equalsIgnoreCase("Active"))
+	{
+		login = formValues.get("login");
+		password = formValues.get("password");
+		active_map = {"firstName":firstName,"lastName":lastName,"email":email,"admin":admin,"status":status,"login":login,"password":password,"language":"en"};
+		active_response = invokeurl
+		[
+			url :instance_url + "api/v3/users"
+			type :POST
+			parameters:active_map.toString()
+			headers:{"content-type":"application/json"}
+			connection:"openproject"
+		];
+		content = active_response.getFileContent();
+		if(content.get("_type").equals("User"))
+		{
+			id = content.get("id");
+			name = content.get("name");
+			createdate = content.get("createdAt").subString(0,10);
+			createdate1 = toDate(createdate,"yyyy-MM-dd");
+			update = content.get("updatedAt").subString(0,10);
+			update1 = toDate(update,"yyyy-MM-dd");
+			login = content.get("login");
+			ig = Map();
+			ig.put(true,"Yes");
+			ig.put(false,"No");
+			admin = ig.get(content.get("admin"));
+			firstName = content.get("firstName");
+			lastName = content.get("lastName");
+			email = content.get("email");
+			status = content.get("status");
+			success_card = {"text":"User created successfully\n(Tap the card to view user details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":name,"data":{"headers":{"Id","Name","Created\n At","Updated At","Login","Admin","First Name","Last Name","Email","Status"},"rows":{{"Id":id,"Name":name,"Created\n At":createdate1,"Updated At":update1,"Login":login,"Admin":admin,"First Name":firstName,"Last Name":lastName,"Email":email,"Status":status}}}}}};
+			return success_card;
+		}
+		else if(content.get("_type").equals("Error"))
+		{
+			error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+			add_data = "";
+			add_details = "";
+			if(content.containsIgnoreCase("_embedded"))
+			{
+				cont = 1;
+				add_data = "\n";
+				add_details = "\n";
+				details = content.get("_embedded").get("errors");
+				for each  val in details
+				{
+					add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+					add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+					cont = cont + 1;
+				}
+			}
+			error_card = {"text":"Error occurred while creating the user" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+			return error_card;
+		}
+	}
+	if(formValues.get("status").get("label").equalsIgnoreCase("Invited"))
+	{
+		invited_map = {"firstName":firstName,"lastName":lastName,"email":email,"admin":admin,"status":status,"language":"en"};
+		invited_response = invokeurl
+		[
+			url :instance_url + "api/v3/users"
+			type :POST
+			parameters:invited_map.toString()
+			headers:{"content-type":"application/json"}
+			connection:"openproject"
+		];
+		info invited_response.getFileContent();
+		content = invited_response.getFileContent();
+		if(content.get("_type").equals("User"))
+		{
+			id = content.get("id");
+			name = content.get("name");
+			createdate = content.get("createdAt").subString(0,10);
+			createdate1 = toDate(createdate,"yyyy-MM-dd");
+			update = content.get("updatedAt").subString(0,10);
+			update1 = toDate(update,"yyyy-MM-dd");
+			login = content.get("login");
+			ig = Map();
+			ig.put(true,"Yes");
+			ig.put(false,"No");
+			admin = ig.get(content.get("admin"));
+			firstName = content.get("firstName");
+			lastName = content.get("lastName");
+			email = content.get("email");
+			status = content.get("status");
+			success_card = {"text":"User created successfully\n(Tap the card to view user details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":name,"data":{"headers":{"Id","Name","Created\n At","Updated At","Login","Admin","First Name","Last Name","Email","Status"},"rows":{{"Id":id,"Name":name,"Created\n At":createdate1,"Updated At":update1,"Login":login,"Admin":admin,"First Name":firstName,"Last Name":lastName,"Email":email,"Status":status}}}}}};
+			return success_card;
+		}
+		else if(content.get("_type").equals("Error"))
+		{
+			error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+			add_data = "";
+			add_details = "";
+			if(content.containsIgnoreCase("_embedded"))
+			{
+				cont = 1;
+				add_data = "\n";
+				add_details = "\n";
+				details = content.get("_embedded").get("errors");
+				for each  val in details
+				{
+					add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+					add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+					cont = cont + 1;
+				}
+			}
+			error_card = {"text":"Error occurred while creating the user" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+			return error_card;
+		}
+	}
+	return response;
+}
+if(form.get("name").equals("reminders"))
+{
+	response = Map();
+	formValues = form.get("values");
+	info formValues;
+	note = formValues.get("note");
+	pack_id = formValues.get("workpackage").get("value");
+	datetime = formValues.get("remindat").get("date_time");
+	time_zone = formValues.get("remindat").get("time_zone_id");
+	datetime_obj = toDateTime(datetime,"yyyy-MM-dd'T'HH:mm",time_zone);
+	india_tz = "Asia/Kolkata";
+	india_time = datetime_obj.toString("yyyy-MM-dd'T'HH:mm",india_tz);
+	info india_time;
+	content = {"note":note,"remindAt":india_time};
+	rem_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + pack_id + "/reminders"
+		type :POST
+		parameters:content.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	rem_content = rem_response.getFileContent();
+	view_content = List();
+	if(rem_content.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(rem_content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = rem_content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while creating the reminder" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":rem_content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(rem_content.get("errorIdentifier")) + "\n(Error Identifier: " + rem_content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(rem_content.get("_type").equals("Reminder"))
+	{
+		column = Map();
+		column.put("Reminder Id",rem_content.get("id"));
+		utc_time = rem_content.get("remindAt");
+		datetime_obj = toDateTime(utc_time,"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'","UTC");
+		india_time = datetime_obj.toString("yyyy-MM-dd'T'HH:mm:ss","Asia/Kolkata");
+		date1 = rem_content.get("remindAt").subString(0,10);
+		time1 = rem_content.get("remindAt").subString(11,19);
+		datetime = toDate(date1,"yyyy-MM-dd") + " (" + time1 + ") ";
+		column.put("Remind At",datetime);
+		creator = rem_content.get("_embedded").get("creator");
+		column.put("User Id",creator.get("id"));
+		if(creator.get("name").isNull() || creator.get("name").equals(""))
+		{
+			column.put("Name","-");
+		}
+		else
+		{
+			column.put("Name",creator.get("name"));
+		}
+		if(creator.get("login").isNull() || creator.get("login").equals(""))
+		{
+			column.put("Login","-");
+		}
+		else
+		{
+			column.put("Login",creator.get("login"));
+		}
+		ad_map = Map();
+		ad_map.put(true,"Yes");
+		ad_map.put(false,"No");
+		column.put("Admin",ad_map.get(creator.get("admin")));
+		if(creator.get("email").isNull() || creator.get("email").equals(""))
+		{
+			column.put("Email","-");
+		}
+		else
+		{
+			column.put("Email",creator.get("email"));
+		}
+		stat_map = Map();
+		stat_map.put("active","Active");
+		stat_map.put("invited","Invited");
+		column.put("Status",stat_map.get(creator.get("status")));
+		package = rem_content.get("_embedded").get("remindable");
+		column.put("Work Package Id",package.get("id"));
+		if(package.get("subject").isNull() || package.get("subject").equals(""))
+		{
+			column.put("Subject","-");
+		}
+		else
+		{
+			column.put("Subject",package.get("subject"));
+		}
+		date1 = package.get("createdAt").subString(0,10);
+		datetime1 = toDate(date1,"yyyy-MM-dd");
+		column.put("Created\n At",datetime1);
+		date2 = package.get("updatedAt").subString(0,10);
+		datetime2 = toDate(date2,"yyyy-MM-dd");
+		column.put("Updated\n At",datetime2);
+		view_content.add(column);
+		success_card = {"text":"Reminder has been created successfully\n(Tap the card to view details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/256/10582/10582084.png","theme":"prompt"},"slides":{{"type":"table","title":"Reminder Detail","data":{"headers":{"Reminder Id","Remind At","User Id","Name","Login","Admin","Email","Status","Work Package Id","Subject","Created\n At","Updated\n At"},"rows":view_content}}}};
+		return success_card;
+	}
+	return response;
+}
+return response;

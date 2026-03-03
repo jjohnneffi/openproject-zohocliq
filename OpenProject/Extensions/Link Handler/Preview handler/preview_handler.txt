@@ -1,0 +1,2 @@
+
+return {"title":"OpenProject Preview","type":"link","provider_url":"https://www.openproject.org/","faviconlink":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png","thumbnail_url":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png","description":"OpenProject - A leading open source project management software. It supports classic, agile as well as hybrid project management and gives you full control over your data.","dynamic_actions":true};

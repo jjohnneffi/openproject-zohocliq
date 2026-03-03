@@ -1,0 +1,9 @@
+//Sample script to add record
+values_map = Map(); 
+values_map.put("projectid", "123"); 
+values_map.put("userid", "123"); 
+values_map.put("channelname", "ABC"); 
+values_map.put("zapikey", "ABC"); 
+values_map.put("projectname", "ABC"); 
+values_map.put("channeluniquename", "ABC"); 
+response_map=zoho.cliq.createRecord("notificationsdb", values_map); 

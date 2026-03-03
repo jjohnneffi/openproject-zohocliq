@@ -1,0 +1,1839 @@
+
+//sample layout button handler
+////////////////////////////////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+////////////////////////////////////////////////////////////////////////////////////////////
+id = "dashboard";
+if(target.containKey("id"))
+{
+	id = target.get("id");
+}
+sections = list();
+tabsArr = {{"label":"Dashboard","id":"dashboard"},{"label":"Work Packages","id":"workpackages"},{"label":"Projects","id":"projects"},{"label":"Users","id":"users"},{"label":"Help","id":"help"}};
+if(target.get("id").startsWith("deletenews##"))
+{
+	check = false;
+	delete_key_id = target.get("id").subString(12);
+	delete_response = invokeurl
+	[
+		url :instance_url + "api/v3/news/" + delete_key_id
+		type :DELETE
+		connection:"openproject"
+	];
+	content = delete_response.getFileContent();
+	if(!content.isNull() && delete_response.getFileContent().get("_type").equals("Error"))
+	{
+		check = true;
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while deleting the news"};
+		return error_banner;
+	}
+	else
+	{
+		success_banner = {"type":"banner","status":"success","text":"News deleted for the project (# " + delete_key_id + ")"};
+		return success_banner;
+	}
+}
+if(target.get("id").startsWith("updatenews##"))
+{
+	modify_id = target.get("id").subString(12);
+	update_response = invokeurl
+	[
+		url :instance_url + "api/v3/news/" + modify_id
+		type :GET
+		connection:"openproject"
+	];
+	contents = update_response.getFileContent();
+	if(contents.get("title").isNull() || contents.get("title").equals(""))
+	{
+		news_title = "";
+	}
+	else
+	{
+		news_title = contents.get("title");
+	}
+	if(contents.get("summary").isNull() || contents.get("summary").equals(""))
+	{
+		summary = "";
+	}
+	else
+	{
+		summary = contents.get("summary");
+	}
+	if(contents.get("description").get("raw").isNull() || contents.get("description").get("raw").equals(""))
+	{
+		description = "";
+	}
+	else
+	{
+		description = contents.get("description").get("raw");
+	}
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	project_ids = List();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("id"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+		project_ids.add(val.get("id"));
+	}
+	project = projectid_map.get(contents.get("_links").get("project").get("title"));
+	news_update = {"type":"form","title":"Update News","name":"upd_news###" + modify_id,"hint":"To update news","button_label":"Submit","inputs":{{"label":"Project","name":"project","value":project,"placeholder":"Update the project from the list","multiple":false,"mandatory":true,"type":"select","options":{}},{"label":"Title","name":"title","value":news_title,"placeholder":"Update the title for the news","min_length":"0","max_length":"60","mandatory":true,"type":"text"},{"label":"Summary","value":summary,"name":"summary","placeholder":"Update the summary for the news","min_length":"0","max_length":"255","mandatory":false,"type":"textarea"},{"label":"Description","name":"description","value":description,"placeholder":"Update the description for the news","min_length":"0","max_length":"10000","mandatory":false,"type":"textarea"}},"action":{"type":"invoke.function","name":"updatenews"}};
+	cont = news_update.get("inputs").get(0).get("options");
+	for each  val in projectid_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		optionMap.put("value",projectid_map.get(val));
+		cont.add(optionMap);
+	}
+	return news_update;
+}
+if(target.get("id").startsWith("viewnews##"))
+{
+	sections = list();
+	viewnews_id = target.get("id").subString(10);
+	read_response = invokeurl
+	[
+		url :instance_url + "api/v3/news/" + viewnews_id
+		type :GET
+		connection:"openproject"
+	];
+	content = read_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while viewing the news details"};
+		return error_banner;
+	}
+	if(content.get("_type").equals("News"))
+	{
+		header = {"title":"Page 1","navigation":"continue"};
+		news_id = content.get("id");
+		sec_id = 1;
+		if(content.get("title").isNull() || content.get("title").equals(""))
+		{
+			news_title = "-";
+		}
+		else
+		{
+			if(content.get("title").length() > 500)
+			{
+				news_title = content.get("title").subString(0,500);
+			}
+			else
+			{
+				news_title = content.get("title");
+			}
+		}
+		if(content.get("summary").isNull() || content.get("summary").equals(""))
+		{
+			summary = "-";
+		}
+		else
+		{
+			if(content.get("summary").length() > 500)
+			{
+				summary = content.get("summary").subString(0,500);
+			}
+			else
+			{
+				summary = content.get("summary");
+			}
+		}
+		if(content.get("description").get("raw").isNull() || content.get("description").get("raw").equals(""))
+		{
+			description = "-";
+		}
+		else
+		{
+			if(content.get("description").get("raw").length() > 500)
+			{
+				description = content.get("description").get("raw").subString(0,500);
+			}
+			else
+			{
+				description = content.get("description").get("raw");
+			}
+		}
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		check = content.get("_links").get("project").get("href");
+		pos = check.lastIndexOf("/");
+		project_id = check.subString(pos + 1);
+		project_name = content.get("_links").get("project").get("title");
+		check1 = content.get("_links").get("author").get("href");
+		pos1 = check1.lastIndexOf("/");
+		author_id = check1.subString(pos1 + 1);
+		author_name = content.get("_links").get("author").get("title");
+		elements = list();
+		elements.add({"type":"text","text":"Title"});
+		elements.add({"type":"subtext","text":news_title});
+		elements.add({"type":"text","text":"Summary"});
+		elements.add({"type":"subtext","text":summary});
+		elements.add({"type":"text","text":"Description"});
+		elements.add({"type":"subtext","text":description});
+		elements.add({"type":"divider"});
+		elements.add({"type":"table","headers":{"News ID","News Title","Created At","Updated At","Project ID","Project Name","Author ID","Author Name"},"rows":{{"News ID":news_id,"News Title":news_title,"Created At":createdate1,"Updated At":update1,"Project ID":project_id,"Project Name":project_name,"Author ID":author_id,"Author Name":author_name}},"style":{"width":{"10","10","10","10","10","10","10","10","10","10"},"text_align":{"center","center","center","center","center","center","center","center","center","center"}}});
+		sections.add({"id":sec_id,"elements":elements});
+	}
+	return {"type":"applet","tabs":tabsArr,"header":header,"active_tab":"dashboard","sections":sections};
+}
+if(target.get("id").equals("createnews##"))
+{
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	project_ids = List();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("id"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+		project_ids.add(val.get("id"));
+	}
+	news_form = {"type":"form","title":"Create News","name":"createnews###","hint":"To create news","button_label":"Submit","inputs":{{"label":"Project","name":"project","placeholder":"Choose the project from the list","multiple":false,"mandatory":true,"type":"select","options":{}},{"label":"Title","name":"title","placeholder":"Enter the title for the news","min_length":"0","max_length":"60","mandatory":true,"type":"text"},{"label":"Summary","name":"summary","placeholder":"Enter the summary for the news","min_length":"0","max_length":"255","mandatory":true,"type":"textarea"},{"label":"Description","name":"description","placeholder":"Enter the description for the news","min_length":"0","max_length":"10000","mandatory":true,"type":"textarea"}},"action":{"type":"invoke.function","name":"createform"}};
+	content = news_form.get("inputs").get(0).get("options");
+	for each  val in projectid_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		optionMap.put("value",projectid_map.get(val));
+		content.add(optionMap);
+	}
+	return news_form;
+}
+if(target.get("id").equals("listunread#"))
+{
+	sections = list();
+	header = {"title":"List unread","navigation":"continue"};
+	notify_response = invokeurl
+	[
+		url :instance_url + "api/v3/notifications"
+		type :GET
+		connection:"openproject"
+	];
+	content = notify_response.getFileContent();
+	number = 0;
+	if(content.get("_type").equals("Collection"))
+	{
+		values = content.get("_embedded").get("elements");
+		sec_id = 1;
+		elements = list();
+		for each  details in values
+		{
+			if(number < 4 && sec_id <= 25)
+			{
+				notify_id = details.get("id");
+				type = details.get("reason");
+				first = type.subString(0,1).toUpperCase();
+				rem = type.subString(1);
+				type1 = first + rem;
+				note = details.get("_embedded").get("details").get(0).get("value");
+				createdate = details.get("createdAt").subString(0,10);
+				createdate1 = toDate(createdate,"yyyy-MM-dd");
+				update = details.get("updatedAt").subString(0,10);
+				update1 = toDate(createdate,"yyyy-MM-dd");
+				pack_href = details.get("_links").get("resource").get("href");
+				packid_pos = pack_href.lastIndexOf("/");
+				workpackage_id = pack_href.subString(packid_pos + 1);
+				workpackage_name = details.get("_links").get("resource").get("title");
+				project_href = details.get("_links").get("project").get("href");
+				projectid_pos = project_href.lastIndexOf("/");
+				project_id = project_href.subString(projectid_pos + 1);
+				project_name = details.get("_links").get("project").get("title");
+				status = details.get("readIAN");
+				// true -> read
+				if(status.equals(false))
+				{
+					elements.add({"type":"title","text":"📬" + type1 + " # " + notify_id,"buttons":{{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewnotify#" + notify_id},{"label":"Mark as read","type":"invoke.function","name":"widgetbuttons","id":"readnotify#" + notify_id}}});
+					elements.add({"type":"text","text":workpackage_name});
+					elements.add({"type":"subtext","text":"Created on " + createdate1});
+					elements.add({"type":"divider"});
+					number = number + 1;
+				}
+				if(number == 4 && sec_id <= 25)
+				{
+					sections.add({"id":sec_id,"elements":elements});
+					sec_id = sec_id + 1;
+					elements = list();
+					number = 0;
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+		if(sec_id <= 25 && elements.length() != 0)
+		{
+			sections.add({"id":sec_id,"elements":elements});
+		}
+	}
+	if(sections.length() == 0)
+	{
+		elements = list();
+		elements.add({"type":"text","text":"No notifications found"});
+		sections.add({"id":sec_id,"elements":elements});
+	}
+	return {"type":"applet","tabs":tabsArr,"header":header,"active_tab":"dashboard","sections":sections};
+}
+if(target.get("id").equals("markasread#"))
+{
+	readall_response = invokeurl
+	[
+		url :instance_url + "api/v3/notifications/read_ian"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = readall_response.getFileContent();
+	if(!content.isNull() && readall_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while marking all notifications as read"};
+		return error_banner;
+	}
+	else
+	{
+		success_banner = {"type":"banner","status":"success","text":"All notifications has been marked as read"};
+		return success_banner;
+	}
+}
+if(target.get("id").startsWith("unreadnotify#"))
+{
+	unreadnotify_id = target.get("id").subString(13);
+	read_response = invokeurl
+	[
+		url :instance_url + "api/v3/notifications/" + unreadnotify_id + "/unread_ian"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = read_response.getFileContent();
+	if(!content.isNull() && read_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while marking the notification as unread"};
+		return error_banner;
+	}
+	else
+	{
+		success_banner = {"type":"banner","status":"success","text":"Notification (# " + unreadnotify_id + ") has been marked as unread"};
+		return success_banner;
+	}
+}
+if(target.get("id").startsWith("readnotify#"))
+{
+	readnotify_id = target.get("id").subString(11);
+	read_response = invokeurl
+	[
+		url :instance_url + "api/v3/notifications/" + readnotify_id + "/read_ian"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = read_response.getFileContent();
+	if(!content.isNull() && read_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while marking the notification as read"};
+		return error_banner;
+	}
+	else
+	{
+		success_banner = {"type":"banner","status":"success","text":"Notification (# " + readnotify_id + ") has been marked as read"};
+		return success_banner;
+	}
+}
+if(target.get("id").startsWith("viewnotify#"))
+{
+	viewnotify_id = target.get("id").subString(11);
+	view_response = invokeurl
+	[
+		url :instance_url + "api/v3/notifications/" + viewnotify_id
+		type :GET
+		connection:"openproject"
+	];
+	content = view_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"success","text":"Error occurred while viewing the notification"};
+		return error_banner;
+	}
+	else
+	{
+		header = {"title":"Page 1","navigation":"continue"};
+		notify_id = content.get("id");
+		type = content.get("reason");
+		first = type.subString(0,1).toUpperCase();
+		rem = type.subString(1);
+		type1 = first + rem;
+		note = content.get("_embedded").get("details").get(0).get("value");
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(createdate,"yyyy-MM-dd");
+		pack_href = content.get("_links").get("resource").get("href");
+		packid_pos = pack_href.lastIndexOf("/");
+		workpackage_id = pack_href.subString(packid_pos + 1);
+		workpackage_name = content.get("_links").get("resource").get("title");
+		project_href = content.get("_links").get("project").get("href");
+		projectid_pos = project_href.lastIndexOf("/");
+		project_id = project_href.subString(projectid_pos + 1);
+		project_name = content.get("_links").get("project").get("title");
+		status = content.get("readIAN");
+		elements = list();
+		elements.add({"type":"table","headers":{"Notification ID","Type","Note","Created At","Updated At","Work Package ID","Work Package Name","Project ID","Project Name","Status"},"rows":{{"Notification ID":notify_id,"Type":type1,"Note":note,"Created At":createdate1,"Updated At":update1,"Work Package ID":workpackage_id,"Work Package Name":workpackage_name,"Project ID":project_id,"Project Name":project_name,"Status":status}},"style":{"width":{"10","10","10","10","10","10","10","10","10","10"},"text_align":{"center","center","center","center","center","center","center","center","center","center"}}});
+		sections.add({"id":1,"elements":elements});
+		return {"type":"applet","header":header,"tabs":tabsArr,"active_tab":"dashboard","sections":sections};
+	}
+}
+if(target.get("id").startsWith("dash##"))
+{
+	dashb_id = target.get("id").subString(6).toLong();
+	if(dashb_id == 0)
+	{
+		sections = list();
+		header = {"title":"Work Packages","navigation":"new","buttons":{{"label":"+  Create","type":"invoke.function","name":"widgetbuttons","id":"createworkpackage#"},{"label":"Sort A–Z ↓","type":"invoke.function","name":"widgetbuttons","id":"filterworkpackage#"}}};
+		package_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages?pageSize=100"
+			type :GET
+			connection:"openproject"
+		];
+		content = package_response.getFileContent();
+		number = 0;
+		if(content.get("_type").equals("WorkPackageCollection"))
+		{
+			values = content.get("_embedded").get("elements");
+			length = values.size() - 1;
+			sec_id = 1;
+			elements = list();
+			for each  val in values
+			{
+				if(number < 4 && length >= 0 && sec_id <= 25)
+				{
+					details = values.get(length);
+					subject = details.get("subject");
+					package_id = details.get("id");
+					createdate = details.get("createdAt").subString(0,10);
+					createdate1 = toDate(createdate,"yyyy-MM-dd");
+					elements.add({"type":"title","text":"📝" + subject,"buttons":{{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewworkpackage#" + package_id},{"label":"Update","type":"invoke.function","name":"widgetbuttons","id":"updateworkpackage#" + package_id},{"label":"Delete","type":"invoke.function","name":"widgetbuttons","id":"deleteworkpackage#" + package_id},{"label":"Set Reminder","type":"invoke.function","name":"widgetbuttons","id":"reminderworkpackage#" + package_id},{"label":"Comment","type":"invoke.function","name":"widgetbuttons","id":"commentworkpackage#" + package_id}}});
+					elements.add({"type":"text","text":"Work Package ID: " + package_id});
+					elements.add({"type":"subtext","text":"Created on " + createdate1});
+					elements.add({"type":"divider"});
+					length = length - 1;
+					number = number + 1;
+					if(number == 4 && length >= 0 && sec_id <= 25)
+					{
+						sections.add({"id":sec_id,"elements":elements});
+						sec_id = sec_id + 1;
+						elements = list();
+						number = 0;
+					}
+				}
+				else
+				{
+					break;
+				}
+			}
+			if(sec_id <= 25 && elements.length() != 0)
+			{
+				sections.add({"id":sec_id,"elements":elements});
+			}
+		}
+		if(sections.length() == 0)
+		{
+			elements = list();
+			elements.add({"type":"text","text":"No work packages found"});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+		return {"type":"applet","header":header,"tabs":tabsArr,"active_tab":"workpackages","sections":sections};
+	}
+	else if(dashb_id == 1)
+	{
+		sections = list();
+		header = {"title":"Projects","navigation":"new","buttons":{{"label":"+  Create","type":"invoke.function","name":"widgetbuttons","id":"createproject#"},{"label":"Sort A–Z ↓","type":"invoke.function","name":"widgetbuttons","id":"filterproject#"}}};
+		project_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects?pageSize=100"
+			type :GET
+			connection:"openproject"
+		];
+		content = project_response.getFileContent();
+		number = 0;
+		if(content.get("_type").equals("Collection"))
+		{
+			values = content.get("_embedded").get("elements");
+			sec_id = 1;
+			elements = list();
+			for each  details in values
+			{
+				if(number < 4 && sec_id <= 25)
+				{
+					name = details.get("name");
+					project_id = details.get("id");
+					createdate = details.get("createdAt").subString(0,10);
+					createdate1 = toDate(createdate,"yyyy-MM-dd");
+					elements.add({"type":"title","text":"🗂️" + name,"buttons":{{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewproject#" + project_id},{"label":"Update","type":"invoke.function","name":"widgetbuttons","id":"updateproject#" + project_id},{"label":"Delete","type":"invoke.function","name":"widgetbuttons","id":"deleteproject#" + project_id},{"label":"Mark as Favorite","type":"invoke.function","name":"widgetbuttons","id":"favorite#" + project_id},{"label":"Create News","type":"invoke.function","name":"widgetbuttons","id":"addnews#" + project_id}}});
+					elements.add({"type":"text","text":"Project ID: " + project_id});
+					elements.add({"type":"subtext","text":"Created on " + createdate1});
+					elements.add({"type":"divider"});
+					number = number + 1;
+					if(number == 4 && sec_id <= 25)
+					{
+						sections.add({"id":sec_id,"elements":elements});
+						sec_id = sec_id + 1;
+						elements = list();
+						number = 0;
+					}
+				}
+				else
+				{
+					break;
+				}
+			}
+			if(sec_id <= 25 && elements.length() != 0)
+			{
+				sections.add({"id":sec_id,"elements":elements});
+			}
+		}
+		if(sections.length() == 0)
+		{
+			elements = list();
+			elements.add({"type":"text","text":"No projects found"});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+		return {"type":"applet","header":header,"tabs":tabsArr,"active_tab":"projects","sections":sections};
+	}
+	else if(dashb_id == 2)
+	{
+		sections = List();
+		header = {"title":"Users","navigation":"new","buttons":{{"label":"+ Add","type":"invoke.function","name":"widgetbuttons","id":"adduser#"},{"label":"Sort A–Z ↓","type":"invoke.function","name":"widgetbuttons","id":"filteruser#"}}};
+		imgUrl = "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2";
+		user_response = invokeurl
+		[
+			url :instance_url + "api/v3/users?pageSize=100"
+			type :GET
+			connection:"openproject"
+		];
+		content = user_response.getFileContent();
+		dataList = list();
+		datalist_count = 0;
+		sec_id = 1;
+		if(content.get("_type").equals("Collection"))
+		{
+			values = content.get("_embedded").get("elements");
+			for each  val in values
+			{
+				if(datalist_count < 15 && sec_id <= 25)
+				{
+					eachData = Map();
+					user_id = val.get("id");
+					name = val.get("name");
+					eachData.put("title",name);
+					eachData.put("description","ID: " + user_id);
+					eachData.put("image_url",imgUrl);
+					buttonList = {{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewuser#" + user_id,"emotion":"positive"},{"label":"Edit","type":"invoke.function","name":"widgetbuttons","id":"edituser#" + user_id,"emotion":"positive"},{"label":"Remove","type":"invoke.function","name":"widgetbuttons","id":"removeuser#" + user_id,"emotion":"negative"}};
+					all_response = invokeurl
+					[
+						url :instance_url + "api/v3/users/" + user_id
+						type :GET
+						connection:"openproject"
+					];
+					content = all_response.getFileContent();
+					if(content.get("_links").containsKey("lock"))
+					{
+						lock_content = {"label":"Lock User","type":"invoke.function","name":"widgetbuttons","id":"lockuser#" + user_id,"emotion":"negative"};
+						buttonList.add(lock_content);
+						eachData.put("buttons",buttonList);
+					}
+					else if(content.get("_links").containsKey("unlock"))
+					{
+						unlock_content = {"label":"Unlock User","type":"invoke.function","name":"widgetbuttons","id":"unlockuser#" + user_id,"emotion":"positive"};
+						buttonList.add(unlock_content);
+						eachData.put("buttons",buttonList);
+					}
+					else
+					{
+						eachData.put("buttons",buttonList);
+					}
+					dataList.add(eachData);
+					datalist_count = datalist_count + 1;
+					if(datalist_count == 15 && sec_id <= 25)
+					{
+						elements = list();
+						elements.add({"type":"cards","data":dataList,"style":{"view":"gallery","size":"small"}});
+						sections.add({"id":sec_id,"elements":elements});
+						dataList = list();
+						datalist_count = 0;
+						sec_id = sec_id + 1;
+					}
+				}
+				else
+				{
+					break;
+				}
+			}
+			if(sec_id <= 25 && dataList.length() != 0)
+			{
+				elements = list();
+				elements.add({"type":"cards","data":dataList,"style":{"view":"gallery","size":"small"}});
+				sections.add({"id":sec_id,"elements":elements});
+			}
+		}
+		if(sections.length() == 0)
+		{
+			elements = list();
+			elements.add({"type":"text","text":"No users found"});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+		return {"type":"applet","tabs":tabsArr,"header":header,"active_tab":"users","sections":sections};
+	}
+	else if(dashb_id == 3)
+	{
+		sections = list();
+		header = {"title":"Notifications","navigation":"continue","buttons":{{"label":"📩 List unread","type":"invoke.function","name":"widgetbuttons","id":"listunread#"},{"label":"Mark all as read 💬","type":"invoke.function","name":"widgetbuttons","id":"markasread#"}}};
+		notify_response = invokeurl
+		[
+			url :instance_url + "api/v3/notifications?pageSize=100"
+			type :GET
+			connection:"openproject"
+		];
+		content = notify_response.getFileContent();
+		number = 0;
+		if(content.get("_type").equals("Collection"))
+		{
+			values = content.get("_embedded").get("elements");
+			sec_id = 1;
+			elements = list();
+			for each  details in values
+			{
+				if(number < 4 && sec_id <= 25)
+				{
+					notify_id = details.get("id");
+					type = details.get("reason");
+					first = type.subString(0,1).toUpperCase();
+					rem = type.subString(1);
+					type1 = first + rem;
+					note = details.get("_embedded").get("details").get(0).get("value");
+					createdate = details.get("createdAt").subString(0,10);
+					createdate1 = toDate(createdate,"yyyy-MM-dd");
+					update = details.get("updatedAt").subString(0,10);
+					update1 = toDate(createdate,"yyyy-MM-dd");
+					pack_href = details.get("_links").get("resource").get("href");
+					packid_pos = pack_href.lastIndexOf("/");
+					workpackage_id = pack_href.subString(packid_pos + 1);
+					workpackage_name = details.get("_links").get("resource").get("title");
+					project_href = details.get("_links").get("project").get("href");
+					projectid_pos = project_href.lastIndexOf("/");
+					project_id = project_href.subString(projectid_pos + 1);
+					project_name = details.get("_links").get("project").get("title");
+					status = details.get("readIAN");
+					// true -> read
+					if(status.equals(true))
+					{
+						elements.add({"type":"title","text":"📭" + type1 + " # " + notify_id,"buttons":{{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewnotify#" + notify_id},{"label":"Mark as unread","type":"invoke.function","name":"widgetbuttons","id":"unreadnotify#" + notify_id}}});
+					}
+					else if(status.equals(false))
+					{
+						elements.add({"type":"title","text":"📬" + type1 + " # " + notify_id,"buttons":{{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewnotify#" + notify_id},{"label":"Mark as read","type":"invoke.function","name":"widgetbuttons","id":"readnotify#" + notify_id}}});
+					}
+					elements.add({"type":"text","text":workpackage_name});
+					elements.add({"type":"subtext","text":"Created on " + createdate1});
+					elements.add({"type":"divider"});
+					number = number + 1;
+					if(number == 4 && sec_id <= 25)
+					{
+						sections.add({"id":sec_id,"elements":elements});
+						sec_id = sec_id + 1;
+						elements = list();
+						number = 0;
+					}
+				}
+				else
+				{
+					break;
+				}
+			}
+			if(sec_id <= 25 && elements.length() != 0)
+			{
+				sections.add({"id":sec_id,"elements":elements});
+			}
+		}
+		if(sections.length() == 0)
+		{
+			elements = list();
+			elements.add({"type":"text","text":"No notifications found"});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+		return {"type":"applet","tabs":tabsArr,"header":header,"active_tab":"dashboard","sections":sections};
+	}
+	else if(dashb_id == 4)
+	{
+		sections = list();
+		header = {"title":"News","navigation":"continue","buttons":{{"label":"+  Create","type":"invoke.function","name":"widgetbuttons","id":"createnews##"}}};
+		news_response = invokeurl
+		[
+			url :instance_url + "api/v3/news?pageSize=100"
+			type :GET
+			connection:"openproject"
+		];
+		content = news_response.getFileContent();
+		number = 0;
+		if(content.get("_type").equals("Collection"))
+		{
+			values = content.get("_embedded").get("elements");
+			sec_id = 1;
+			elements = list();
+			for each  details in values
+			{
+				if(number < 4 && sec_id <= 25)
+				{
+					news_id = details.get("id");
+					title = details.get("title");
+					summary = details.get("summary");
+					description = details.get("description").get("raw");
+					createdate = details.get("createdAt").subString(0,10);
+					createdate1 = toDate(createdate,"yyyy-MM-dd");
+					update = details.get("updatedAt").subString(0,10);
+					update1 = toDate(createdate,"yyyy-MM-dd");
+					project_href = details.get("_links").get("project").get("href");
+					projectid_pos = project_href.lastIndexOf("/");
+					project_id = project_href.subString(projectid_pos + 1);
+					project_name = details.get("_links").get("project").get("title");
+					elements.add({"type":"title","text":"📰" + title,"buttons":{{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewnews##" + news_id},{"label":"Update","type":"invoke.function","name":"widgetbuttons","id":"updatenews##" + news_id},{"label":"Delete","type":"invoke.function","name":"widgetbuttons","id":"deletenews##" + news_id}}});
+					elements.add({"type":"text","text":"News ID: " + news_id});
+					elements.add({"type":"subtext","text":"Created on " + createdate1});
+					elements.add({"type":"divider"});
+					number = number + 1;
+					if(number == 4 && sec_id <= 25)
+					{
+						sections.add({"id":sec_id,"elements":elements});
+						sec_id = sec_id + 1;
+						elements = list();
+						number = 0;
+					}
+				}
+				else
+				{
+					break;
+				}
+			}
+			if(sec_id <= 25 && elements.length() != 0)
+			{
+				sections.add({"id":sec_id,"elements":elements});
+			}
+		}
+		if(sections.length() == 0)
+		{
+			elements = list();
+			elements.add({"type":"text","text":"No news found"});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+		return {"type":"applet","tabs":tabsArr,"header":header,"active_tab":"dashboard","sections":sections};
+	}
+	else if(dashb_id == 5)
+	{
+		header = {"title":"Help"};
+		elements = list();
+		elements.add({"type":"text","text":"It’s the OpenProject extension — a collaborative project management platform that helps you organize projects, track work, and stay aligned with your team. Now, let’s explore all the components integrated within Zoho Cliq."});
+		elements.add({"type":"divider"});
+		elements.add({"type":"title","text":"OpenProject Bot"});
+		elements.add({"type":"fields","data":{{"Work Packages":"To create, fetch, update, and delete work packages from the system, enabling complete management of task-related data."},{"Projects":"To create, view, update, and delete projects within the system, ensuring complete control over project-related information."},{"Users":"To add, view, edit, and remove users, allowing efficient management of user information and access."},{"Reminders":"To list and create work-package-related reminders and to receive timely in-app notifications for better task tracking and follow-up."},{"News":"To create, view, modify, and delete project-related news updates."}},"style":{"short":false}});
+		elements.add({"type":"divider"});
+		elements.add({"type":"title","text":"OpenProject Widget"});
+		elements.add({"type":"fields","data":{{"Dashboard":"Provides a centralized space where you can access and manage all key components, including work packages, projects, users, notifications, news, and the help section."},{"Work Packages":"Manage and track all work-package–related activities, with a clear visual layout to monitor progress effectively."},{"Projects":"Manage and oversee all project-related activities, with a streamlined view to review and track project progress."},{"Users":"Maintain and track all user-related information, with an organized overview to review specific access permissions."},{"Help":"Provides comprehensive guidance for using the extension, with detailed instructions for each component."}},"style":{"short":false}});
+		elements.add({"type":"divider"});
+		elements.add({"type":"title","text":"Slash Commands"});
+		elements.add({"type":"fields","data":{{"/workpackage":"Allows viewing, updating, and deleting watchers for a work package, enabling instant workflow."},{"/project":"View project details and easily mark or unmark projects as favorites."},{"/user":"Used to view user details and to lock or unlock user access as needed."},{"/commentpack":"Used to view activities and add comments to a work package"}},"style":{"short":false}});
+		elements.add({"type":"divider"});
+		elements.add({"type":"title","text":"Message Actions"});
+		elements.add({"type":"fields","data":{{"Add to News":"Used to create a news update and associate it with a specific project."},{"Add to Reminder":"Allows to set a reminder for a specific work package, ensuring timely follow-up on important tasks."},{"Post to Work         Package":"Enables to add comments to a specific work package, facilitating communication and collaboration."},{"Create Task":"Allows creating Task-type work packages for organized task management."}},"style":{"short":false}});
+		elements.add({"type":"divider"});
+		elements.add({"type":"title","text":"Schedulers"});
+		elements.add({"type":"fields","data":{{"reminders":"Notifies you everyday with reminders from the application."}},"style":{"short":false}});
+		elements.add({"type":"divider"});
+		sections = list();
+		sections.add({"id":1,"elements":elements});
+		elements1 = list();
+		elements1.add({"type":"divider"});
+		elements1.add({"type":"title","text":"Connections"});
+		elements1.add({"type":"fields","data":{{"openproject":"Provides seamless integration with OpenProject using OAuth 2.0 authentication, allowing secure access to project data, user information, and other resources."}},"style":{"short":false}});
+		elements1.add({"type":"divider"});
+		elements1.add({"type":"title","text":"Additional Information"});
+		elements1.add({"type":"fields","data":{{"New Users":"Before installing the extension, we recommend new users to create an account in OpenProject for a hassle-free setup."},{"Users":"Be careful about self-locking or self-removal which means locking your own account or removing yourself, which will restrict access to all extension functions but it can be unlocked or recovered by another accessible user."},{"Error Handling":"All possible user errors are handled thoroughly, with detailed explanations and technical information to support future extension development."},{"Data Center":"This extension is compatible with accounts linked to the US data center (zoho.com)."}},"style":{"short":false}});
+		elements1.add({"type":"divider"});
+		sections.add({"id":2,"elements":elements1});
+		return {"type":"applet","tabs":tabsArr,"header":header,"active_tab":"help","sections":sections};
+	}
+}
+if(target.get("id").startsWith("unlockuser#"))
+{
+	unlock_id = target.get("id").subString(11);
+	lock_response = invokeurl
+	[
+		url :instance_url + "api/v3/users/" + unlock_id + "/lock"
+		type :DELETE
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = lock_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while unlocking the user"};
+		return error_banner;
+	}
+	else if(content.get("_type").equals("User"))
+	{
+		if(content.get("_links").contains("lock"))
+		{
+			success_banner = {"type":"banner","status":"success","text":"User (# " + unlock_id + ") has been unlocked"};
+			return success_banner;
+		}
+	}
+}
+if(target.get("id").startsWith("lockuser#"))
+{
+	lock_id = target.get("id").subString(9);
+	lock_response = invokeurl
+	[
+		url :instance_url + "api/v3/users/" + lock_id + "/lock"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = lock_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while locking the user"};
+		return error_banner;
+	}
+	else if(content.get("_type").equals("User"))
+	{
+		if(content.get("_links").contains("unlock"))
+		{
+			success_banner = {"type":"banner","status":"success","text":"User (# " + lock_id + ") has been locked"};
+			return success_banner;
+		}
+	}
+}
+if(target.get("id").startsWith("addnews#"))
+{
+	news_id = target.get("id").subString(8);
+	news_form = {"type":"form","title":"Create News","name":"createnews#" + news_id,"hint":"To create news","button_label":"Submit","inputs":{{"label":"Title","name":"title","placeholder":"Enter the title for the news","min_length":"0","max_length":"60","mandatory":true,"type":"text"},{"label":"Summary","name":"summary","placeholder":"Enter the summary for the news","min_length":"0","max_length":"255","mandatory":true,"type":"textarea"},{"label":"Description","name":"description","placeholder":"Enter the description for the news","min_length":"0","max_length":"10000","mandatory":true,"type":"textarea"}},"action":{"type":"invoke.function","name":"createform"}};
+	return news_form;
+}
+if(target.get("id").startsWith("favorite#"))
+{
+	favpro_id = target.get("id").subString(9);
+	fav_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + favpro_id + "favorite"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	flag = false;
+	content = fav_response.getFileContent();
+	if(fav_response.getFileContent().contains("_Error") && fav_response.getFileContent().get("_type").equals("Error"))
+	{
+		flag = true;
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while adding projects to favorites"};
+		return error_banner;
+	}
+	if(!flag)
+	{
+		success_banner = {"type":"banner","status":"success","text":"Project (# " + favpro_id + ") has been added to favorites"};
+		return success_banner;
+	}
+}
+if(target.get("id").startsWith("commentworkpackage#"))
+{
+	com_id = target.get("id").subString(19);
+	form_content = {"type":"form","title":"Post to Work Package","name":"post_comment#" + com_id,"hint":"To post comments to a specific work package","button_label":"Submit","inputs":{{"label":"Comment","name":"comment","placeholder":"Enter the comment for the work package","min_length":"0","max_length":"255","mandatory":true,"type":"textarea"}},"action":{"type":"invoke.function","name":"createform"}};
+	return form_content;
+}
+if(target.get("id").startsWith("reminderworkpackage#"))
+{
+	rem_id = target.get("id").subString(20);
+	package_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	create_remind = {"type":"form","title":"Reminders","name":"reminders#" + rem_id,"hint":"Add reminders to work package","button_label":"Submit","inputs":{{"label":"Note","name":"note","placeholder":"Enter the note for the reminder","min_length":"0","max_length":"50","mandatory":true,"type":"textarea"},{"label":"Remind At","name":"remindat","placeholder":"Select when you'd like to be reminded","mandatory":true,"type":"datetime"}},"action":{"type":"invoke.function","name":"createform"}};
+	return create_remind;
+}
+if(target.get("id").startsWith("removeuser#"))
+{
+	depl_id = target.get("id").subString(11);
+	delete_response = invokeurl
+	[
+		url :instance_url + "api/v3/users/" + depl_id
+		type :DELETE
+		connection:"openproject"
+	];
+	flag = false;
+	content = delete_response.getFileContent();
+	if(delete_response.getFileContent().contains("_Error") && delete_response.getFileContent().get("_type").equals("Error"))
+	{
+		flag = true;
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while removing the user"};
+		return error_banner;
+	}
+	if(!flag)
+	{
+		success_banner = {"type":"banner","status":"success","text":"User (# " + depl_id + ") has been removed"};
+		return success_banner;
+	}
+}
+if(target.get("id").startsWith("deleteproject#"))
+{
+	delp_id = target.get("id").subString(14);
+	delete_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + delp_id
+		type :DELETE
+		connection:"openproject"
+	];
+	content = delete_response.getFileContent();
+	if(!content.isNull() && delete_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while deleting the project"};
+		return error_banner;
+	}
+	else
+	{
+		success_banner = {"type":"banner","status":"success","text":"Project (# " + delp_id + ") has been deleted"};
+		return success_banner;
+	}
+}
+if(target.get("id").startsWith("deleteworkpackage#"))
+{
+	del_id = target.get("id").subString(18);
+	check = false;
+	delete_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + del_id
+		type :DELETE
+		connection:"openproject"
+	];
+	content = delete_response.getFileContent();
+	if(!content.isNull() && delete_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while deleting the work package"};
+		return error_banner;
+	}
+	else
+	{
+		success_banner = {"type":"banner","status":"success","text":"Work Package (# " + del_id + ") has been deleted"};
+		return success_banner;
+	}
+}
+if(target.get("id").startsWith("edituser#"))
+{
+	usd_id = target.get("id").subString(9);
+	update_response = invokeurl
+	[
+		url :instance_url + "api/v3/users/" + usd_id
+		type :GET
+		connection:"openproject"
+	];
+	content = update_response.getFileContent();
+	id = content.get("id");
+	name = content.get("name");
+	createdate = content.get("createdAt").subString(0,10);
+	createdate1 = toDate(createdate,"yyyy-MM-dd");
+	update = content.get("updatedAt").subString(0,10);
+	update1 = toDate(update,"yyyy-MM-dd");
+	login = content.get("login");
+	ig = Map();
+	ig.put(true,"Yes");
+	ig.put(false,"No");
+	stat = Map();
+	stat.put("active","Active");
+	stat.put("invited","Invited");
+	admon = content.get("admin");
+	admin = ig.get(content.get("admin"));
+	firstName = content.get("firstName");
+	lastName = content.get("lastName");
+	email = content.get("email");
+	status = stat.get(content.get("status"));
+	edit_user = {"type":"form","title":"Edit User","name":"@@#" + id,"hint":"Edit User","button_label":"Submit","inputs":{{"label":"First Name","name":"firstName","value":firstName,"placeholder":"Update user's first name","min_length":"0","max_length":"50","mandatory":true,"type":"text"},{"label":"Last Name","name":"lastName","value":lastName,"placeholder":"Update user's last name","min_length":"0","max_length":"50","mandatory":true,"type":"text"},{"label":"Admin","name":"admin","value":admon,"hint":"Grants the user full administrative priviledges","type":"toggle"}},"action":{"type":"invoke.function","name":"edituserform"}};
+	return edit_user;
+}
+if(target.get("id").startsWith("updateproject#"))
+{
+	uppd_id = target.get("id").subString(14);
+	view_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + uppd_id
+		type :GET
+		connection:"openproject"
+	];
+	output = view_response.getFileContent();
+	info output;
+	id = output.get("id");
+	name = output.get("name");
+	identifier = output.get("identifier");
+	active = output.get("active");
+	public = output.get("public");
+	description = output.get("description").get("raw");
+	createdate = output.get("createdAt").subString(0,10);
+	createdate1 = toDate(createdate,"yyyy-MM-dd");
+	update = output.get("updatedAt").subString(0,10);
+	update1 = toDate(update,"yyyy-MM-dd");
+	status_explanation = output.get("statusExplanation").get("raw");
+	status_check = output.get("_links").get("status").get("href");
+	status = "";
+	new_status = "";
+	if(!status_check.isNull())
+	{
+		status = output.get("_links").get("status").get("title");
+		new_status = replaceAll(status," ","");
+	}
+	parent_check = output.get("_links").get("parent").get("href");
+	parent = "";
+	new_parent = "";
+	if(!parent_check.isNull())
+	{
+		parent = output.get("_links").get("parent").get("title");
+		new_parent = replaceAll(parent," ","");
+	}
+	project_form = {"type":"form","title":"Update Project","name":"@#" + uppd_id,"hint":"Update Project","button_label":"Submit","inputs":{{"label":"Name","name":"name","value":name,"placeholder":"Update the name for the project","min_length":"0","max_length":"100","mandatory":true,"type":"text"},{"label":"Description","name":"description","value":description,"placeholder":"Update the description for the project","min_length":"0","max_length":"100","mandatory":false,"type":"textarea"},{"label":"Active Project","name":"active","value":active,"hint":"Indicates whether the project is currently active or already archived","type":"toggle"},{"label":"Public Project","name":"public","value":public,"hint":"Indicates whether the project is accessible for everybody","type":"toggle"},{"label":"Status","name":"status","value":new_status,"placeholder":"Update the status from the list","multiple":false,"mandatory":false,"type":"dynamic_select","options":{}},{"label":"Status Explanation","name":"status_explanation","value":status_explanation,"placeholder":"Update the status explanation for the project","min_length":"0","max_length":"100","mandatory":false,"type":"textarea"},{"label":"Parent","name":"parent","value":new_parent,"placeholder":"Update the parent project from the list","multiple":false,"mandatory":false,"type":"select","options":{}}},"action":{"type":"invoke.function","name":"updateprojectform"}};
+	project = invokeurl
+	[
+		url :instance_url + "api/v3/projects/form"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	status_options = project_form.get("inputs").get(4).get("options");
+	parent_options = project_form.get("inputs").get(6).get("options");
+	status = project.getFileContent().get("_embedded").get("schema").get("status").get("_links").get("allowedValues");
+	status_map = Map();
+	for each  value in status
+	{
+		content = Map();
+		content.put("label",value.get("title"));
+		new_status = replaceAll(value.get("title")," ","");
+		content.put("value",new_status);
+		status_map.put(value.get("title"),value.get("href"));
+		status_options.add(content);
+	}
+	available_parent = invokeurl
+	[
+		url :instance_url + "api/v3/projects/available_parent_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent = available_parent.getFileContent().get("_embedded").get("elements");
+	parent_map = Map();
+	for each  value in parent
+	{
+		content = Map();
+		content.put("label",value.get("_links").get("self").get("title"));
+		new_parent = replaceAll(value.get("_links").get("self").get("title")," ","");
+		content.put("value",new_parent.getAlphaNumeric());
+		parent_map.put(value.get("_links").get("self").get("title"),value.get("_links").get("self").get("href"));
+		parent_options.add(content);
+	}
+	return project_form;
+}
+if(target.get("id").startsWith("updateworkpackage#"))
+{
+	upd_id = target.get("id").subString(18);
+	view_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + upd_id
+		type :GET
+		connection:"openproject"
+	];
+	content = view_response.getFileContent();
+	info content;
+	id = content.get("id");
+	subject = content.get("subject");
+	description = content.get("description").get("raw");
+	percent = content.get("percentageDone");
+	ignore = content.get("ignoreNonWorkingDays");
+	type = content.get("_links").get("type").get("title");
+	priority = content.get("_links").get("priority").get("title");
+	project = content.get("_links").get("project").get("title");
+	status = content.get("_links").get("status").get("title");
+	assignee = content.get("_links").get("assignee").get("title");
+	parent = content.get("_links").get("parent").get("title");
+	project_phase_def = content.get("_links").get("projectPhaseDefinition").get("title");
+	new_project = replaceAll(project," ","");
+	new_project_phase_def = replaceAll(project_phase_def," ","");
+	new_status = "";
+	new_type = replaceAll(type," ","");
+	new_parent = "";
+	new_assignee = "";
+	comp_date = "";
+	start_date = "";
+	due_date = "";
+	if(!assignee.isNull())
+	{
+		new_assignee = replaceAll(assignee," ","");
+	}
+	if(!status.isNull())
+	{
+		new_status = replaceAll(status," ","");
+	}
+	if(!parent.isNull())
+	{
+		instance = instance_url.subString(0,instance_url.length() - 1);
+		parent_response = invokeurl
+		[
+			url :instance + content.get("_links").get("parent").get("href")
+			type :GET
+			connection:"openproject"
+		];
+		parent_type = parent_response.getFileContent().get("_links").get("type").get("title");
+		new_parent_type = replaceAll(parent_type," ","");
+		new_parent = replaceAll(parent," ","").getAlphaNumeric() + new_parent_type;
+	}
+	if(!type.equals("Milestone"))
+	{
+		if(content.get("startDate").isNull())
+		{
+			start_date = "";
+		}
+		else
+		{
+			start_date = content.get("startDate");
+		}
+		if(content.get("dueDate").isNull())
+		{
+			due_date = "";
+		}
+		else
+		{
+			due_date = content.get("dueDate");
+		}
+	}
+	else
+	{
+		if(content.get("date").isNull())
+		{
+			comp_date = "";
+		}
+		else
+		{
+			comp_date = content.get("date");
+		}
+	}
+	if(percent.isNull())
+	{
+		percent = "";
+	}
+	if(description.equals(""))
+	{
+		desc = "";
+	}
+	else
+	{
+		desc = description;
+	}
+	if(new_project_phase_def.isNull())
+	{
+		new_project_phase_def = "";
+	}
+	if(new_parent.isNull())
+	{
+		new_parent = "";
+	}
+	if(status.isNull())
+	{
+		status = "";
+	}
+	if(priority.isNull())
+	{
+		priority = "";
+	}
+	///////////////////////////////////////////////////////////////////
+	instance_url = "https://openproject30.openproject.com/";
+	///////////////////////////////////////////////////////////////////
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+	}
+	assignee_response = invokeurl
+	[
+		url :instance_url + "api/v3/users?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	assignee_map = Map();
+	assignee_list = List();
+	assignee_content = assignee_response.getFileContent().get("_embedded").get("elements");
+	for each  val in assignee_content
+	{
+		assignee_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		assignee_list.add(val.get("_links").get("self").get("title"));
+	}
+	parent_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent_map = Map();
+	parent_list = List();
+	parent_content = parent_response.getFileContent().get("_embedded").get("elements");
+	for each  val in parent_content
+	{
+		if(!val.get("_links").get("type").get("title").equals("Milestone"))
+		{
+			parent_type = val.get("_links").get("self").get("title") + " (" + val.get("_links").get("type").get("title") + ")";
+			parent_map.put(parent_type,val.get("_links").get("self").get("href"));
+			parent_list.add(parent_type);
+		}
+	}
+	projectphase_response = invokeurl
+	[
+		url :instance_url + "api/v3/project_phase_definitions?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectphase_map = Map();
+	projectphase_list = List();
+	projectphase_content = projectphase_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectphase_content
+	{
+		projectphase_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectphase_list.add(val.get("_links").get("self").get("title"));
+	}
+	workpackage_update = {"inputs":{{"min_length":"0","name":"subject","label":"Subject","placeholder":"Update the subject for the work package","type":"text","mandatory":true,"value":subject,"max_length":"100"},{"min_length":"0","name":"description","label":"Description","placeholder":"Update the description for the work package","type":"textarea","mandatory":false,"value":desc,"max_length":"100"},{"label":"Percentage Done","name":"percentage_done","placeholder":"Update the percentage done","value":percent,"min":"0","max":"100","mandatory":false,"value":percent,"type":"number"},{"name":"ignore_days","label":"Ignore non-working days ","type":"toggle","value":ignore},{"name":"project","trigger_on_change":true,"multiple":false,"options":{},"label":"Project","placeholder":"Update the project from the list","type":"select","mandatory":true,"value":new_project},{"label":"Project Phase","name":"project_phase","placeholder":"Update the project phase from the list (Demo project only)","multiple":false,"mandatory":false,"value":new_project_phase_def,"type":"select","options":{}},{"name":"type","trigger_on_change":true,"multiple":false,"options":{{"label":"Task","value":"Task"},{"label":"Milestone","value":"Milestone"},{"label":"Summary task","value":"Summarytask"},{"label":"Feature","value":"Feature"},{"label":"Epic","value":"Epic"},{"label":"User story","value":"Userstory"},{"label":"Bug","value":"Bug"}},"label":"Type","placeholder":"Update the type from the list","type":"select","mandatory":true,"value":new_type},{"name":"priority","multiple":false,"options":{{"label":"Low","value":"Low"},{"label":"Normal","value":"Normal"},{"label":"High","value":"High"},{"label":"Immediate","value":"Immediate"}},"label":"Priority","placeholder":"Update the priority from the list","type":"select","mandatory":false,"value":priority},{"label":"Start Date","trigger_on_change":true,"name":"start_date","placeholder":"Update the start date for the work package (except Milestone type)","mandatory":false,"type":"date","value":start_date},{"label":"Due Date","trigger_on_change":true,"name":"due_date","placeholder":"Update the due date for the work package (except Milestone type)","mandatory":false,"type":"date","value":due_date},{"label":"Completion Date","name":"comp_date","placeholder":"Update the completion date for the work package (Milestone type only)","mandatory":false,"type":"date","value":comp_date},{"label":"Parent Work Package","name":"parent","placeholder":"Update the parent work package from the list","multiple":false,"mandatory":false,"value":new_parent,"type":"select","options":{}},{"name":"status","multiple":false,"options":{{"label":"New","value":"New"},{"label":"Specified","value":"Specified"},{"label":"Confirmed","value":"Confirmed"},{"label":"Scheduled","value":"Scheduled"},{"label":"In progress","value":"Inprogress"},{"label":"Developed","value":"Developed"},{"label":"Tested","value":"Tested"},{"label":"Closed","value":"Closed"},{"label":"On hold","value":"Onhold"},{"label":"Rejected","value":"Rejected"}},"label":"Status","placeholder":"Update the status from the list","type":"select","mandatory":false,"value":new_status},{"name":"assignee","multiple":false,"options":{},"label":"Assignee","placeholder":"Update the assignee from the list","type":"select","mandatory":false,"value":new_assignee}},"hint":"Update Work Package","name":"#@" + upd_id,"action":{"name":"updatepackage","type":"invoke.function"},"button_label":"Submit","type":"form","title":"Update Work Package"};
+	info workpackage_update;
+	projectphase = workpackage_update.get("inputs").get(5).get("options");
+	for each  val in projectphase_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval);
+		projectphase.add(optionMap);
+	}
+	parent = workpackage_update.get("inputs").get(11).get("options");
+	size = parent_list.size() - 1;
+	for each  val in parent_list
+	{
+		rev_val = parent_list.get(size);
+		optionMap = Map();
+		optionMap.put("label",rev_val);
+		newval = replaceAll(rev_val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		parent.add(optionMap);
+		size = size - 1;
+	}
+	content = workpackage_update.get("inputs").get(4).get("options");
+	for each  val in projectid_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		content.add(optionMap);
+	}
+	user = workpackage_update.get("inputs").get(13).get("options");
+	for each  val in assignee_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		user.add(optionMap);
+	}
+	return workpackage_update;
+}
+if(target.get("id").startsWith("filteruser#"))
+{
+	sections = List();
+	header = {"title":"Users","navigation":"new","buttons":{{"label":"+  Add","type":"invoke.function","name":"widgetbuttons","id":"adduser#"},{"label":"Sort A–Z ↓","type":"invoke.function","name":"widgetbuttons","id":"filteruser#"}}};
+	imgUrl = "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2";
+	user_response = invokeurl
+	[
+		url :instance_url + "api/v3/users?sortBy=[[\"name\",\"asc\"]]&pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	content = user_response.getFileContent();
+	dataList = list();
+	datalist_count = 0;
+	sec_id = 1;
+	if(content.get("_type").equals("Collection"))
+	{
+		values = content.get("_embedded").get("elements");
+		for each  val in values
+		{
+			if(datalist_count < 15 && sec_id <= 25)
+			{
+				eachData = Map();
+				user_id = val.get("id");
+				name = val.get("name");
+				eachData.put("title",name);
+				eachData.put("description","ID: " + user_id);
+				eachData.put("image_url",imgUrl);
+				buttonList = {{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewuser#" + user_id,"emotion":"positive"},{"label":"Edit","type":"invoke.function","name":"widgetbuttons","id":"edituser#" + user_id,"emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"widgetbuttons","id":"deleteuser#" + user_id,"emotion":"negative"}};
+				all_response = invokeurl
+				[
+					url :instance_url + "api/v3/users/" + user_id
+					type :GET
+					connection:"openproject"
+				];
+				content = all_response.getFileContent();
+				if(content.get("_links").containsKey("lock"))
+				{
+					lock_content = {"label":"Lock User","type":"invoke.function","name":"widgetbuttons","id":"lockuser#" + user_id,"emotion":"negative"};
+					buttonList.add(lock_content);
+					eachData.put("buttons",buttonList);
+				}
+				else if(content.get("_links").containsKey("unlock"))
+				{
+					unlock_content = {"label":"Unlock User","type":"invoke.function","name":"widgetbuttons","id":"unlockuser#" + user_id,"emotion":"positive"};
+					buttonList.add(unlock_content);
+					eachData.put("buttons",buttonList);
+				}
+				else
+				{
+					eachData.put("buttons",buttonList);
+				}
+				dataList.add(eachData);
+				datalist_count = datalist_count + 1;
+				if(datalist_count == 15 && sec_id <= 25)
+				{
+					elements = list();
+					elements.add({"type":"cards","data":dataList,"style":{"view":"gallery","size":"small"}});
+					sections.add({"id":sec_id,"elements":elements});
+					dataList = list();
+					datalist_count = 0;
+					sec_id = sec_id + 1;
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+		if(sec_id <= 25 && dataList.length() != 0)
+		{
+			elements = list();
+			elements.add({"type":"cards","data":dataList,"style":{"view":"gallery","size":"small"}});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+		if(sections.length() == 0)
+		{
+			elements = list();
+			elements.add({"type":"text","text":"No users found"});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+	}
+	return {"type":"applet","tabs":tabsArr,"header":header,"active_tab":"users","sections":sections};
+}
+if(target.get("id").startsWith("filterproject#"))
+{
+	sections = list();
+	header = {"title":"Projects","navigation":"new","buttons":{{"label":"+  Create","type":"invoke.function","name":"widgetbuttons","id":"createproject#"},{"label":"Sort A–Z ↓","type":"invoke.function","name":"widgetbuttons","id":"filterproject#"}}};
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects?sortBy=[[\"name\",\"asc\"]]&pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	content = project_response.getFileContent();
+	number = 0;
+	if(content.get("_type").equals("Collection"))
+	{
+		values = content.get("_embedded").get("elements");
+		sec_id = 1;
+		elements = list();
+		for each  details in values
+		{
+			if(number < 4 && sec_id <= 25)
+			{
+				name = details.get("name");
+				project_id = details.get("id");
+				createdate = details.get("createdAt").subString(0,10);
+				createdate1 = toDate(createdate,"yyyy-MM-dd");
+				elements.add({"type":"title","text":"🗂️" + name,"buttons":{{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewproject#" + project_id},{"label":"Update","type":"invoke.function","name":"widgetbuttons","id":"updateproject#" + project_id},{"label":"Delete","type":"invoke.function","name":"widgetbuttons","id":"deleteproject#" + project_id},{"label":"Mark as Favorite","type":"invoke.function","name":"widgetbuttons","id":"favorite#" + project_id},{"label":"Create News","type":"invoke.function","name":"widgetbuttons","id":"createnews#" + project_id}}});
+				elements.add({"type":"text","text":"Project ID: " + project_id});
+				elements.add({"type":"subtext","text":"Created on " + createdate1});
+				elements.add({"type":"divider"});
+				number = number + 1;
+				if(number == 4 && sec_id <= 25)
+				{
+					sections.add({"id":sec_id,"elements":elements});
+					sec_id = sec_id + 1;
+					elements = list();
+					number = 0;
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+		if(sec_id <= 25 && elements.length() != 0)
+		{
+			sections.add({"id":sec_id,"elements":elements});
+		}
+		if(sections.length() == 0)
+		{
+			elements = list();
+			elements.add({"type":"text","text":"No projects found"});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+	}
+	return {"type":"applet","header":header,"tabs":tabsArr,"active_tab":"projects","sections":sections};
+}
+if(target.get("id").startsWith("filterworkpackage#"))
+{
+	sections = list();
+	header = {"title":"Work Packages","navigation":"new","buttons":{{"label":"+  Create","type":"invoke.function","name":"widgetbuttons","id":"createworkpackage#"},{"label":"Sort A–Z ↓","type":"invoke.function","name":"widgetbuttons","id":"filterworkpackage#"}}};
+	package_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?sortBy=[[\"subject\",\"asc\"]]&pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	content = package_response.getFileContent();
+	number = 0;
+	if(content.get("_type").equals("WorkPackageCollection"))
+	{
+		values = content.get("_embedded").get("elements");
+		sec_id = 1;
+		elements = list();
+		for each  details in values
+		{
+			if(number < 4 && sec_id <= 25)
+			{
+				subject = details.get("subject");
+				package_id = details.get("id");
+				createdate = details.get("createdAt").subString(0,10);
+				createdate1 = toDate(createdate,"yyyy-MM-dd");
+				elements.add({"type":"title","text":"📝" + subject,"buttons":{{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewworkpackage#" + package_id},{"label":"Update","type":"invoke.function","name":"widgetbuttons","id":"updateworkpackage#" + package_id},{"label":"Delete","type":"invoke.function","name":"widgetbuttons","id":"deleteworkpackage#" + package_id},{"label":"Set Reminder","type":"invoke.function","name":"widgetbuttons","id":"reminderworkpackage#" + package_id},{"label":"Comment","type":"invoke.function","name":"widgetbuttons","id":"commentworkpackage#" + package_id}}});
+				elements.add({"type":"text","text":"Work Package ID: " + package_id});
+				elements.add({"type":"subtext","text":"Created on " + createdate1});
+				elements.add({"type":"divider"});
+				number = number + 1;
+				if(number == 4 && sec_id <= 25)
+				{
+					sections.add({"id":sec_id,"elements":elements});
+					sec_id = sec_id + 1;
+					elements = list();
+					number = 0;
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+		if(sec_id <= 25 && elements.length() != 0)
+		{
+			sections.add({"id":sec_id,"elements":elements});
+		}
+		if(sections.length() == 0)
+		{
+			elements = list();
+			elements.add({"type":"text","text":"No work packages found"});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+	}
+	return {"type":"applet","header":header,"tabs":tabsArr,"active_tab":"workpackages","sections":sections};
+}
+if(target.get("id").startsWith("viewuser#"))
+{
+	header = {"title":"Page 1","navigation":"continue"};
+	sections = list();
+	elements = list();
+	user_id = target.get("id").subString(9);
+	view_response = invokeurl
+	[
+		url :instance_url + "api/v3/users/" + user_id
+		type :GET
+		connection:"openproject"
+	];
+	content = view_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"success","text":"Error occurred while viewing the user details"};
+		return error_banner;
+	}
+	else
+	{
+		user_id = content.get("id");
+		name = content.get("name");
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		login = content.get("login");
+		ig = Map();
+		ig.put(true,"Yes");
+		ig.put(false,"No");
+		stat = Map();
+		stat.put("active","Active");
+		stat.put("invited","Invited");
+		admin = ig.get(content.get("admin"));
+		firstName = content.get("firstName");
+		lastName = content.get("lastName");
+		email = content.get("email");
+		status = stat.get(content.get("status"));
+		elements.add({"type":"table","headers":{"ID","Name","Created At","Updated At","Login","Admin","First Name","Last Name","Email","Status"},"rows":{{"ID":user_id,"Name":name,"Created At":createdate1,"Updated At":update1,"Login":login,"Admin":admin,"First Name":firstName,"Last Name":lastName,"Email":email,"Status":status}},"style":{"width":{"10","10","10","10","10","10","10","10","10","10"},"text_align":{"center","center","center","center","center","center","center","center","center","center"}}});
+		sections.add({"id":1,"elements":elements});
+		return {"type":"applet","header":header,"tabs":tabsArr,"active_tab":"users","sections":sections};
+	}
+}
+if(target.get("id").startsWith("viewproject#"))
+{
+	header = {"title":"Page 1","navigation":"continue"};
+	sections = list();
+	elements = list();
+	project_id = target.get("id").subString(12);
+	view_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + project_id
+		type :GET
+		connection:"openproject"
+	];
+	output = view_response.getFileContent();
+	if(output.get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"success","text":"Error occurred while viewing the project details"};
+		return error_banner;
+	}
+	else
+	{
+		id = output.get("id");
+		name = output.get("name");
+		identifier = output.get("identifier");
+		active = output.get("active");
+		if(active == true)
+		{
+			active = "Yes";
+		}
+		else if(active == false)
+		{
+			active = "No";
+		}
+		public = output.get("public");
+		if(public == true)
+		{
+			public = "Yes";
+		}
+		else if(public == false)
+		{
+			public = "No";
+		}
+		description = output.get("description").get("raw");
+		createdate = output.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = output.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		status_explanation = output.get("statusExplanation").get("raw");
+		status_check = output.get("_links").get("status").get("href");
+		status = "";
+		if(!status_check.isNull())
+		{
+			status = output.get("_links").get("status").get("title");
+		}
+		parent_check = output.get("_links").get("parent").get("href");
+		parent = "";
+		if(!parent_check.isNull())
+		{
+			parent = output.get("_links").get("parent").get("title");
+		}
+		elements.add({"type":"table","headers":{"Project ID","Name","Identifier","Created At","Updated At","Active Project","Public Project","Status","Status Explanation","Parent Project"},"rows":{{"Project ID":id,"Name":name,"Identifier":identifier,"Created At":createdate1,"Updated At":update1,"Active Project":active,"Public Project":public,"Status":status,"Status Explanation":status_explanation,"Parent Project":parent}},"style":{"width":{"10","10","10","10","10","10","10","10","10","10"},"text_align":{"center","center","center","center","center","center","center","center","center","center"}}});
+		sections.add({"id":1,"elements":elements});
+		return {"type":"applet","header":header,"tabs":tabsArr,"active_tab":"projects","sections":sections};
+	}
+}
+if(target.get("id").startsWith("viewworkpackage#"))
+{
+	header = {"title":"Page 1","navigation":"continue"};
+	sections = list();
+	elements = list();
+	package_id = target.get("id").subString(16);
+	view_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + package_id
+		type :GET
+		connection:"openproject"
+	];
+	content = view_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"success","text":"Error occurred while viewing the work package details"};
+		return error_banner;
+	}
+	else
+	{
+		id = content.get("id");
+		subject = content.get("subject");
+		description = content.get("description").get("raw");
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		percent = content.get("percentageDone");
+		ignore = content.get("ignoreNonWorkingDays");
+		type = content.get("_links").get("type").get("title");
+		priority = content.get("_links").get("priority").get("title");
+		project = content.get("_links").get("project").get("title");
+		status = content.get("_links").get("status").get("title");
+		assignee = content.get("_links").get("assignee").get("title");
+		author = content.get("_links").get("author").get("title");
+		parent = content.get("_links").get("parent").get("title");
+		project_phase_def = content.get("_links").get("projectPhaseDefinition").get("title");
+		if(content.get("startDate").isNull())
+		{
+			start_date1 = "";
+		}
+		else
+		{
+			start_date = content.get("startDate");
+			start_date1 = toDate(start_date,"yyyy-MM-dd");
+		}
+		if(content.get("dueDate").isNull())
+		{
+			due_date1 = "";
+		}
+		else
+		{
+			due_date = content.get("dueDate");
+			due_date1 = toDate(due_date,"yyyy-MM-dd");
+		}
+		if(content.get("date").isNull())
+		{
+			comp_date1 = "";
+		}
+		else
+		{
+			comp_date = content.get("date");
+			comp_date1 = toDate(comp_date,"yyyy-MM-dd");
+		}
+		ig = Map();
+		ig.put(true,"Yes");
+		ig.put(false,"No");
+		if(description.equals(""))
+		{
+			desc = "";
+		}
+		else
+		{
+			desc = description;
+		}
+		if(percent == null)
+		{
+			per = 0;
+		}
+		else
+		{
+			per = percent;
+		}
+		if(project_phase_def.isNull())
+		{
+			project_phase_def = "";
+		}
+		if(assignee.isNull())
+		{
+			assignee = "";
+		}
+		if(parent.isNull())
+		{
+			parent = "";
+		}
+		if(status.isNull())
+		{
+			status = "";
+		}
+		if(priority.isNull())
+		{
+			priority = "";
+		}
+		elements.add({"type":"table","headers":{"Work Package ID","Subject","Created At","Updated At","Type","Priority","Project","Parent Work Package","Status","Assignee"},"rows":{{"Work Package ID":id,"Subject":subject,"Created At":createdate1,"Updated At":update1,"Type":type,"Priority":priority,"Project":project,"Parent Work Package":parent,"Status":status,"Assignee":assignee}},"style":{"width":{"10","10","10","10","10","10","10","10","10","10"},"text_align":{"center","center","center","center","center","center","center","center","center","center"}}});
+		sections.add({"id":1,"elements":elements});
+		return {"type":"applet","header":header,"tabs":tabsArr,"active_tab":"workpackages","sections":sections};
+	}
+}
+if(target.get("id").equals("adduser#"))
+{
+	add_user = {"type":"form","title":"Add User","name":"add_user#","hint":"Add User","button_label":"Submit","inputs":{{"label":"User Creation Type","name":"status","trigger_on_change":true,"placeholder":"Choose the creation type from the list","multiple":false,"mandatory":true,"type":"select","options":{{"value":"Active","label":"Active"},{"value":"Invited","label":"Invited"}}},{"label":"Login ID","name":"login","placeholder":"Set the login ID for the user","min_length":"0","max_length":"50","mandatory":true,"type":"text"},{"label":"Password","name":"password","placeholder":"Set the password for the user (min 10 characters)","min_length":"0","max_length":"50","mandatory":true,"type":"text","format":"password"},{"label":"First Name","name":"firstName","placeholder":"Enter user's first name","min_length":"0","max_length":"50","mandatory":true,"type":"text"},{"label":"Last Name","name":"lastName","placeholder":"Enter user's last name","min_length":"0","max_length":"50","mandatory":true,"type":"text"},{"label":"Email","name":"email","placeholder":"Enter the user's email address","mandatory":true,"type":"text","format":"email"},{"label":"Admin","name":"admin","hint":"Grants the user full administrative priviledges","value":false,"type":"toggle"}},"action":{"type":"invoke.function","name":"createform"}};
+	return add_user;
+}
+if(target.get("id").equals("createproject#"))
+{
+	instance_url = "https://openproject30.openproject.com/";
+	project_form = {"type":"form","title":"Create Project","name":"create_project#","hint":"Create Project","button_label":"Submit","inputs":{{"label":"Name","name":"name","placeholder":"Enter the name for the project","min_length":"0","max_length":"25","mandatory":true,"type":"text"},{"label":"Description","name":"description","placeholder":"Enter the description for the project","min_length":"0","max_length":"100","mandatory":false,"type":"textarea"},{"label":"Active Project","name":"active","value":true,"hint":"Indicates whether the project is currently active or already archived","type":"toggle"},{"label":"Public Project","name":"public","hint":"Indicates whether the project is accessible for everybody","value":false,"type":"toggle"},{"label":"Status","name":"status","placeholder":"Choose the status from the list","value":"Finished","multiple":false,"mandatory":false,"type":"dynamic_select","options":{}},{"label":"Status Explanation","name":"status_explanation","placeholder":"Enter the status explanation for the project","min_length":"0","max_length":"100","mandatory":false,"type":"textarea"},{"label":"Parent","name":"parent","placeholder":"Choose the parent project from the list","multiple":false,"mandatory":false,"type":"select","options":{}}},"action":{"type":"invoke.function","name":"createform"}};
+	project = invokeurl
+	[
+		url :instance_url + "api/v3/projects/form"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	status_options = project_form.get("inputs").get(4).get("options");
+	parent_options = project_form.get("inputs").get(6).get("options");
+	status = project.getFileContent().get("_embedded").get("schema").get("status").get("_links").get("allowedValues");
+	status_map = Map();
+	for each  value in status
+	{
+		content = Map();
+		content.put("label",value.get("title"));
+		new_status = replaceAll(value.get("title")," ","");
+		content.put("value",new_status);
+		status_map.put(value.get("title"),value.get("href"));
+		status_options.add(content);
+	}
+	available_parent = invokeurl
+	[
+		url :instance_url + "api/v3/projects/available_parent_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent = available_parent.getFileContent().get("_embedded").get("elements");
+	parent_map = Map();
+	for each  value in parent
+	{
+		content = Map();
+		content.put("label",value.get("_links").get("self").get("title"));
+		new_parent = replaceAll(value.get("_links").get("self").get("title")," ","");
+		content.put("value",new_parent.getAlphaNumeric());
+		parent_map.put(value.get("_links").get("self").get("title"),value.get("_links").get("self").get("href"));
+		parent_options.add(content);
+	}
+	return project_form;
+}
+if(target.get("id").equals("createworkpackage#"))
+{
+	//////////////////////////////////////////////////////////////
+	instance_url = "https://openproject30.openproject.com/";
+	//////////////////////////////////////////////////////////////
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	info projectid_content;
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+	}
+	assignee_response = invokeurl
+	[
+		url :instance_url + "api/v3/users?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	assignee_map = Map();
+	assignee_list = List();
+	assignee_content = assignee_response.getFileContent().get("_embedded").get("elements");
+	for each  val in assignee_content
+	{
+		assignee_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		assignee_list.add(val.get("_links").get("self").get("title"));
+	}
+	parent_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent_map = Map();
+	parent_list = List();
+	parent_content = parent_response.getFileContent().get("_embedded").get("elements");
+	for each  val in parent_content
+	{
+		if(!val.get("_links").get("type").get("title").equals("Milestone"))
+		{
+			parent_type = val.get("_links").get("self").get("title") + " (" + val.get("_links").get("type").get("title") + ")";
+			parent_map.put(parent_type,val.get("_links").get("self").get("href"));
+			parent_list.add(parent_type);
+		}
+	}
+	projectphase_response = invokeurl
+	[
+		url :instance_url + "api/v3/project_phase_definitions?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectphase_map = Map();
+	projectphase_list = List();
+	projectphase_content = projectphase_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectphase_content
+	{
+		projectphase_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectphase_list.add(val.get("_links").get("self").get("title"));
+	}
+	workpackage_create = {"inputs":{{"min_length":"0","name":"subject","label":"Subject","placeholder":"Enter the subject for the work package","type":"text","mandatory":true,"max_length":"100"},{"min_length":"0","name":"description","label":"Description","placeholder":"Enter the description for the work package","type":"textarea","mandatory":false,"max_length":"100"},{"label":"Percentage Done","name":"percentage_done","placeholder":"Enter the percentage done","value":"0","min":"0","max":"100","mandatory":false,"type":"number"},{"name":"ignore_days","label":"Ignore non-working days ","type":"toggle","value":false},{"name":"project","trigger_on_change":true,"multiple":false,"options":{},"label":"Project","placeholder":"Choose the project from the list","type":"select","mandatory":true},{"label":"Project Phase","name":"project_phase","placeholder":"Choose the project phase from the list (Demo project only)","multiple":false,"mandatory":false,"type":"select","options":{}},{"name":"type","trigger_on_change":true,"multiple":false,"options":{{"label":"Task","value":"Task"},{"label":"Milestone","value":"Milestone"},{"label":"Summary task","value":"Summarytask"},{"label":"Feature","value":"Feature"},{"label":"Epic","value":"Epic"},{"label":"User story","value":"Userstory"},{"label":"Bug","value":"Bug"}},"label":"Type","placeholder":"Choose the type from the list","type":"select","mandatory":true},{"name":"priority","multiple":false,"options":{{"label":"Low","value":"Low"},{"label":"Normal","value":"Normal"},{"label":"High","value":"High"},{"label":"Immediate","value":"Immediate"}},"label":"Priority","placeholder":"Choose the priority from the list","type":"select","mandatory":false,"value":"Normal"},{"label":"Start Date","trigger_on_change":true,"name":"start_date","placeholder":"Enter the start date for the work package (except Milestone type)","mandatory":false,"type":"date"},{"label":"Due Date","trigger_on_change":true,"name":"due_date","placeholder":"Enter the due date for the work package (except Milestone type)","mandatory":false,"type":"date"},{"label":"Completion Date","name":"comp_date","placeholder":"Enter the completion date for the work package (Milestone type only)","mandatory":false,"type":"date"},{"label":"Parent Work Package","name":"parent","placeholder":"Choose the parent work package from the list","multiple":false,"mandatory":false,"type":"select","options":{}},{"name":"status","multiple":false,"options":{{"label":"New","value":"New"},{"label":"Specified","value":"Specified"},{"label":"Confirmed","value":"Confirmed"},{"label":"Scheduled","value":"Scheduled"},{"label":"In progress","value":"Inprogress"},{"label":"Developed","value":"Developed"},{"label":"Tested","value":"Tested"},{"label":"Closed","value":"Closed"},{"label":"On hold","value":"Onhold"},{"label":"Rejected","value":"Rejected"}},"label":"Status","placeholder":"Choose the status from the list","type":"select","mandatory":false,"value":"New"},{"name":"assignee","multiple":false,"options":{},"label":"Assignee","placeholder":"Choose the assignee from the list","type":"select","mandatory":true}},"hint":"Create Work Package","name":"create_workpackage#","action":{"name":"createform","type":"invoke.function"},"button_label":"Submit","type":"form","title":"Create Work Package"};
+	projectphase = workpackage_create.get("inputs").get(5).get("options");
+	for each  val in projectphase_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval);
+		projectphase.add(optionMap);
+	}
+	parent = workpackage_create.get("inputs").get(11).get("options");
+	size = parent_list.size() - 1;
+	for each  val in parent_list
+	{
+		rev_val = parent_list.get(size);
+		optionMap = Map();
+		optionMap.put("label",rev_val);
+		newval = replaceAll(rev_val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		parent.add(optionMap);
+		size = size - 1;
+	}
+	content = workpackage_create.get("inputs").get(4).get("options");
+	for each  val in projectid_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		content.add(optionMap);
+	}
+	user = workpackage_create.get("inputs").get(13).get("options");
+	for each  val in assignee_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		user.add(optionMap);
+	}
+	return workpackage_create;
+}
+return {"type":"applet","tabs":tabsArr,"active_tab":id,"sections":sections};

@@ -1,0 +1,290 @@
+
+response = Map();
+message = Map();
+if(selections.size() > 0)
+{
+	details = selections.get(0).toMap();
+	if(details.get("title").containsIgnoreCase("View Project Details"))
+	{
+		/////////////////////////////////////////////////////////
+		instance_url = "https://openproject30.openproject.com/";
+		/////////////////////////////////////////////////////////
+		view_content = list();
+		all_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		all_content = all_response.getFileContent().get("_embedded").get("elements");
+		for each  val in all_content
+		{
+			column = Map();
+			column.put("Id",val.get("id"));
+			column.put("Name",val.get("name"));
+			if(!val.get("_links").get("status").get("href").isNull())
+			{
+				column.put("Status",val.get("_links").get("status").get("title"));
+			}
+			else
+			{
+				column.put("Status","-");
+			}
+			if(!val.get("_links").get("parent").get("href").isNull())
+			{
+				column.put("Parent",val.get("_links").get("parent").get("title"));
+			}
+			else
+			{
+				column.put("Parent","-");
+			}
+			column.put("View","[View #" + val.get("id") + "](invoke.function|authorize)");
+			view_content.add(column);
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to view project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - View","data":{"headers":{"Id","Name","Status","Parent","View"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(details.get("title").containsIgnoreCase("Add to Favorites"))
+	{
+		/////////////////////////////////////////////////////////
+		instance_url = "https://openproject30.openproject.com/";
+		/////////////////////////////////////////////////////////
+		view_content = list();
+		all_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		all_content = all_response.getFileContent().get("_embedded").get("elements");
+		for each  val in all_content
+		{
+			column = Map();
+			column.put("Id",val.get("id"));
+			column.put("Name",val.get("name"));
+			if(!val.get("_links").get("status").get("href").isNull())
+			{
+				column.put("Status",val.get("_links").get("status").get("title"));
+			}
+			else
+			{
+				column.put("Status","-");
+			}
+			if(!val.get("_links").get("parent").get("href").isNull())
+			{
+				column.put("Parent",val.get("_links").get("parent").get("title"));
+			}
+			else
+			{
+				column.put("Parent","-");
+			}
+			column.put("Add to favorites","[Add #" + val.get("id") + "](invoke.function|authorize)");
+			view_content.add(column);
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to view project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Status","data":{"headers":{"Id","Name","Status","Parent","Add to favorites"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(details.get("title").containsIgnoreCase("Remove from Favorites"))
+	{
+		/////////////////////////////////////////////////////////
+		instance_url = "https://openproject30.openproject.com/";
+		/////////////////////////////////////////////////////////
+		view_content = list();
+		all_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects?pageSize=49"
+			type :GET
+			connection:"openproject"
+		];
+		all_content = all_response.getFileContent().get("_embedded").get("elements");
+		for each  val in all_content
+		{
+			column = Map();
+			column.put("Id",val.get("id"));
+			column.put("Name",val.get("name"));
+			if(!val.get("_links").get("status").get("href").isNull())
+			{
+				column.put("Status",val.get("_links").get("status").get("title"));
+			}
+			else
+			{
+				column.put("Status","-");
+			}
+			if(!val.get("_links").get("parent").get("href").isNull())
+			{
+				column.put("Parent",val.get("_links").get("parent").get("title"));
+			}
+			else
+			{
+				column.put("Parent","-");
+			}
+			column.put("Remove from favorites","[Remove #" + val.get("id") + "](invoke.function|authorize)");
+			view_content.add(column);
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to view project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Status","data":{"headers":{"Id","Name","Status","Parent","Remove from favorites"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+}
+else if(arguments.equals(" -view"))
+{
+	/////////////////////////////////////////////////////////
+	instance_url = "https://openproject30.openproject.com/";
+	/////////////////////////////////////////////////////////
+	view_content = list();
+	all_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects?pageSize=49"
+		type :GET
+		connection:"openproject"
+	];
+	all_content = all_response.getFileContent().get("_embedded").get("elements");
+	for each  val in all_content
+	{
+		column = Map();
+		column.put("Id",val.get("id"));
+		column.put("Name",val.get("name"));
+		if(!val.get("_links").get("status").get("href").isNull())
+		{
+			column.put("Status",val.get("_links").get("status").get("title"));
+		}
+		else
+		{
+			column.put("Status","-");
+		}
+		if(!val.get("_links").get("parent").get("href").isNull())
+		{
+			column.put("Parent",val.get("_links").get("parent").get("title"));
+		}
+		else
+		{
+			column.put("Parent","-");
+		}
+		column.put("View","[View #" + val.get("id") + "](invoke.function|authorize)");
+		view_content.add(column);
+	}
+	if(view_content.length() == 0)
+	{
+		check = true;
+	}
+	else
+	{
+		package_list = {"text":"Click to view project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - View","data":{"headers":{"Id","Name","Status","Parent","View"},"rows":view_content}}}};
+		return package_list;
+	}
+}
+else if(arguments.equals(" -unfav"))
+{
+	/////////////////////////////////////////////////////////
+	instance_url = "https://openproject30.openproject.com/";
+	/////////////////////////////////////////////////////////
+	view_content = list();
+	all_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects?pageSize=49"
+		type :GET
+		connection:"openproject"
+	];
+	all_content = all_response.getFileContent().get("_embedded").get("elements");
+	for each  val in all_content
+	{
+		column = Map();
+		column.put("Id",val.get("id"));
+		column.put("Name",val.get("name"));
+		if(!val.get("_links").get("status").get("href").isNull())
+		{
+			column.put("Status",val.get("_links").get("status").get("title"));
+		}
+		else
+		{
+			column.put("Status","-");
+		}
+		if(!val.get("_links").get("parent").get("href").isNull())
+		{
+			column.put("Parent",val.get("_links").get("parent").get("title"));
+		}
+		else
+		{
+			column.put("Parent","-");
+		}
+		column.put("Remove from favorites","[Remove #" + val.get("id") + "](invoke.function|authorize)");
+		view_content.add(column);
+	}
+	if(view_content.length() == 0)
+	{
+		check = true;
+	}
+	else
+	{
+		package_list = {"text":"Click to view project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Status","data":{"headers":{"Id","Name","Status","Parent","Remove from favorites"},"rows":view_content}}}};
+		return package_list;
+	}
+}
+else if(arguments.equals(" -fav"))
+{
+	/////////////////////////////////////////////////////////
+	instance_url = "https://openproject30.openproject.com/";
+	/////////////////////////////////////////////////////////
+	view_content = list();
+	all_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects?pageSize=49"
+		type :GET
+		connection:"openproject"
+	];
+	all_content = all_response.getFileContent().get("_embedded").get("elements");
+	for each  val in all_content
+	{
+		column = Map();
+		column.put("Id",val.get("id"));
+		column.put("Name",val.get("name"));
+		if(!val.get("_links").get("status").get("href").isNull())
+		{
+			column.put("Status",val.get("_links").get("status").get("title"));
+		}
+		else
+		{
+			column.put("Status","-");
+		}
+		if(!val.get("_links").get("parent").get("href").isNull())
+		{
+			column.put("Parent",val.get("_links").get("parent").get("title"));
+		}
+		else
+		{
+			column.put("Parent","-");
+		}
+		column.put("Add to favorites","[Add #" + val.get("id") + "](invoke.function|authorize)");
+		view_content.add(column);
+	}
+	if(view_content.length() == 0)
+	{
+		check = true;
+	}
+	else
+	{
+		package_list = {"text":"Click to view project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Status","data":{"headers":{"Id","Name","Status","Parent","Add to favorites"},"rows":view_content}}}};
+		return package_list;
+	}
+}
+return response;

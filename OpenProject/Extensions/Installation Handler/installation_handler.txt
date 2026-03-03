@@ -1,0 +1,29 @@
+
+// This will be triggered after the extension is installed.
+// Return status as 200, If successful handling has been done.
+response = Map();
+success = true;
+if(success)
+{
+	response.put("status","200");
+	response.put("title","Success!");
+	response.put("message","We're glad you chose this extension!");
+	note = list();
+	note.add("1. Use the bot to manage your work more efficiently.");
+	note.add("2. Use the slash commands and message actions to keep track for activities");
+	response.put("note",note);
+	response.put("footer","Contact support@openproject.com for any related help / support.");
+}
+else
+{
+	response.put("status","500");
+	response.put("title","Uh-oh!");
+	response.put("message","We're sorry! The extension installation failed.");
+	note = list();
+	note.add("Installation failure might be due to the following reasons:");
+	note.add("1. Your account is not in the premium plan.");
+	note.add("2. You have not configured the webhook properly.");
+	response.put("note",note);
+	response.put("footer","Contact support@openproject.com for any related help / support.");
+}
+return response;

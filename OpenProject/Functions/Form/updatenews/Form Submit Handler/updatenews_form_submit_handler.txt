@@ -1,0 +1,130 @@
+
+response = Map();
+///////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+///////////////////////////////////////////////////////////
+if(form.get("name").startsWith("upd_news###"))
+{
+	id = form.get("name").subString(11);
+	formValues = form.get("values");
+	info formValues;
+	summary = formValues.get("summary");
+	description = formValues.get("description");
+	project_name = formValues.get("project").get("label");
+	project_id = formValues.get("project").get("value");
+	title = formValues.get("title");
+	news_map = {"title":title,"summary":summary,"description":{"raw":description},"_links":{"project":{"href":"/api/v3/projects/" + project_id}}};
+	news_post = invokeurl
+	[
+		url :instance_url + "api/v3/news/" + id
+		type :PATCH
+		parameters:news_map.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = news_post.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while updating the news"};
+		return error_banner;
+	}
+	else if(content.get("_type").equals("News"))
+	{
+		success_banner = {"type":"banner","status":"success","text":"News updated for the project (# " + id + ")"};
+		return success_banner;
+	}
+}
+else
+{
+	id = form.get("name");
+	formValues = form.get("values");
+	info formValues;
+	summary = formValues.get("summary");
+	description = formValues.get("description");
+	project_name = formValues.get("project").get("label");
+	project_id = formValues.get("project").get("value");
+	title = formValues.get("title");
+	news_map = {"title":title,"summary":summary,"description":{"raw":description},"_links":{"project":{"href":"/api/v3/projects/" + project_id}}};
+	news_post = invokeurl
+	[
+		url :instance_url + "api/v3/news/" + id
+		type :PATCH
+		parameters:news_map.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = news_post.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while updating the news" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(content.get("_type").equals("News"))
+	{
+		view_content = List();
+		column = Map();
+		column.put("News Id",content.get("id"));
+		if(content.get("title").isNull() || content.get("title").equals(""))
+		{
+			column.put("News Title","-");
+			news_title = "-";
+		}
+		else
+		{
+			column.put("News Title",content.get("title"));
+			news_title = content.get("title");
+		}
+		if(content.get("summary").isNull() || content.get("summary").equals(""))
+		{
+			summary = "-";
+		}
+		else
+		{
+			summary = content.get("summary");
+		}
+		if(content.get("description").get("raw").isNull() || content.get("description").get("raw").equals(""))
+		{
+			description = "-";
+		}
+		else
+		{
+			description = content.get("description").get("raw");
+		}
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		column.put("Created At",createdate1);
+		column.put("Updated At",update1);
+		check = content.get("_links").get("project").get("href");
+		pos = check.lastIndexOf("/");
+		project_id = check.subString(pos + 1);
+		column.put("Project Id",project_id);
+		column.put("Project Name",content.get("_links").get("project").get("title"));
+		check1 = content.get("_links").get("author").get("href");
+		pos1 = check1.lastIndexOf("/");
+		author_id = check1.subString(pos1 + 1);
+		column.put("Author Id",author_id);
+		column.put("Author Name",content.get("_links").get("author").get("title"));
+		view_content.add(column);
+		success_card = {"text":"News updated successfully\n(Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/7063/7063304.png","theme":"prompt"},"slides":{{"type":"label","title":"News Details","data":{{"Title":news_title},{"Summary":summary},{"Description":description}}},{"type":"table","title":"","data":{"headers":{"News Id","News Title","Created At","Updated At","Project Id","Project Name","Author Id","Author Name"},"rows":view_content}}}};
+		return success_card;
+	}
+}
+return response;

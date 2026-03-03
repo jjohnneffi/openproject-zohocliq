@@ -1,0 +1,169 @@
+
+///////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+///////////////////////////////////////////////////////////////////
+info arguments;
+info user;
+zoho_userid = user.get("zoho_user_id");
+zapi_key = arguments.get("input").get("token");
+query_map = Map();
+criteria_string = "userid==" + zoho_userid;
+query_map.put("criteria",criteria_string);
+response_map = zoho.cliq.getRecords("notificationsdb",query_map);
+record_id = 0;
+if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+{
+	project_label = response_map.get("list").get(0).get("projectname");
+	project_value = response_map.get("list").get(0).get("projectid");
+	channel_label = response_map.get("list").get(0).get("channelname");
+	channel_value = response_map.get("list").get(0).get("channeluniquename");
+}
+//https://cliq.zoho.com/api/v2/applications/2305843009213702014/incoming?appkey=sbx-ODA2My03YTgzZDI3NS03NGVkLTQ1NzUtOGFiZi00N2M4NmQxNjA4MmI=
+app_id = "2305843009213702014";
+app_key = "sbx-ODA2My03YTgzZDI3NS03NGVkLTQ1NzUtOGFiZi00N2M4NmQxNjA4MmI=";
+// project:updated, project:created, work_package:updated, work_package:created, work_package_comment:comment, work_package_comment:internal_comment, time_entry:created, attachment:created
+param = {"url":"https://cliq.zoho.com/api/v2/applications/" + app_id + "/incoming?appkey=" + app_key + "&zapikey=" + zapi_key,"all":true,"project:updated":true,"project_created":true,"work_package:updated":true,"work_package:created":true,"work_package_comment:comment":true,"work_package_comment:internal_comment":true,"time_entry:created":true,"attachment:created":true};
+createWebhook = invokeurl
+[
+	url :instance_url + "api/v3/projects/" + project_value
+	type :POST
+	parameters:param.toString()
+	headers:{"content-type":"application/json"}
+	connection:"openproject"
+];
+info createWebhook.getFileContent();
+brief = createWebhook.getFileContent();
+record_id = user.get("zoho_user_id");
+query_map = Map();
+criteria_string = "userid==" + record_id;
+query_map.put("criteria",criteria_string);
+response_map = zoho.cliq.getRecords("notificationsdb",query_map);
+record_id = 0;
+info response_map;
+if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+{
+	values_map = Map();
+	values_map.put("zapikey",zapi_key);
+	info user;
+	query_map = Map();
+	criteria_string = "userid==" + zoho_userid;
+	query_map.put("criteria",criteria_string);
+	response_map = zoho.cliq.getRecords("notificationsdb",query_map);
+	record_id = 0;
+	if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+	{
+		record_id = response_map.get("list").get(0).get("id");
+	}
+	if(record_id.length() > 0)
+	{
+		response_map = zoho.cliq.updateRecord("notificationsdb",record_id,values_map);
+	}
+}
+msg_card = {"text":project_label + " notifications are now available in the " + channel_label + " channel","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"}};
+msg_content = {"text":"All " + project_label + "-related notifications from OpenProject will be posted in this channel","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2039/2039001.png","theme":"prompt"}};
+channel_list = invokeurl
+[
+	url :"https://cliq.zoho.com/api/v2/channelsbyname/" + channel_value + "/message"
+	type :POST
+	parameters:msg_content.toString()
+	headers:{"content-type":"application/json"}
+	connection:"zohocliq"
+];
+info channel_list;
+return msg_card;
+// zoho_userid = user.get("zoho_user_id");
+// values_map = Map();
+// values_map.put("userid",zoho_userid);
+// values_map.put("zapikey",zapi_key);
+// response_map = zoho.cliq.createRecord("notificationsdb",values_map);
+// card = {"text":"Hello *" + user.get("first_name") + "* ! Before dive in, check out the options below. Make sure your extension is properly configured, or tap Help to get a quick gist of what this extension can do. ","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"theme":"modern-inline"},"buttons":{{"label":"Configure","hint":"Ensure that your extension is properly configured","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"configure"},{"label":"Help","hint":"To know about this extension","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"help"}}};
+// return card;
+// // Use the below given instant button's syntax to see how the function code is invoked! 
+// // [What's this?](invoke.function|authenticate)
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// instance_url = "https://openproject30.openproject.com/";
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// response = Map();
+// info arguments;
+// token = arguments.get("input").get("token");
+// info token;
+// project_response = invokeurl
+// [
+// 	url :instance_url + "api/v3/projects"
+// 	type :GET
+// 	connection:"openproject"
+// ];
+// info project_response;
+// content = project_response.getFileContent();
+// if(content.contains("_type") && content.get("_type").equals("Error"))
+// {
+// 	error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+// 	add_data = "";
+// 	add_details = "";
+// 	if(content.containsIgnoreCase("_embedded"))
+// 	{
+// 		cont = 1;
+// 		add_data = "\n";
+// 		add_details = "\n";
+// 		details = content.get("_embedded").get("errors");
+// 		for each  val in details
+// 		{
+// 			add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+// 			add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+// 			cont = cont + 1;
+// 		}
+// 	}
+// 	error_card = {"text":"Error occurred while fetching the projects" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+// 	return error_card;
+// }
+// else
+// {
+// 	total = content.get("_embedded").get("elements");
+// 	for each  val in total
+// 	{
+// 		id = val.get("id");
+// 		paramsMap = Map();
+// 		//https://cliq.zoho.com/api/v2/applications/2305843009213702014/incoming?appkey=sbx-ODA2My03YTgzZDI3NS03NGVkLTQ1NzUtOGFiZi00N2M4NmQxNjA4MmI=
+// 		app_id = "2305843009213702014";
+// 		app_key = "sbx-ODA2My03YTgzZDI3NS03NGVkLTQ1NzUtOGFiZi00N2M4NmQxNjA4MmI=";
+// 		// project:updated, project:created, work_package:updated, work_package:created, work_package_comment:comment, work_package_comment:internal_comment, time_entry:created, attachment:created
+// 		param = {"url":"https://cliq.zoho.com/api/v2/applications/" + app_id + "/incoming?appkey=" + app_key + "&zapikey=" + token,"text":id,"all":true,"project:updated":true,"project_created":true,"work_package:updated":true,"work_package:created":true,"work_package_comment:comment":true,"work_package_comment:internal_comment":true,"time_entry:created":true,"attachment:created":true};
+// 		createWebhook = invokeurl
+// 		[
+// 			url :instance_url + "api/v3/projects/" + id
+// 			type :POST
+// 			parameters:param.toString()
+// 			headers:{"content-type":"application/json"}
+// 			connection:"openproject"
+// 		];
+// 	}
+// 	info createWebhook.getFileContent();
+// 	brief = createWebhook.getFileContent();
+// 	if(brief.contains("_type") && brief.get("_type").equals("Error"))
+// 	{
+// 		error_content = {"urn:openproject-org:api:v3:errors:NotFound":"The requested resource could not be found.","urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+// 		add_data = "";
+// 		add_details = "";
+// 		if(brief.containsIgnoreCase("_embedded"))
+// 		{
+// 			cont = 1;
+// 			add_data = "\n";
+// 			add_details = "\n";
+// 			details = brief.get("_embedded").get("errors");
+// 			for each  val in details
+// 			{
+// 				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+// 				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+// 				cont = cont + 1;
+// 			}
+// 		}
+// 		error_card = {"text":"Authentication failed due to an error" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":brief.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(brief.get("errorIdentifier")) + "\n(Error Identifier: " + brief.get("errorIdentifier") + ")" + add_details}}};
+// 		return error_card;
+// 	}
+// 	else
+// 	{
+// 		msg_card = {"text":"Authentication has been completed successfully and notifications are now active ","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2039/2039001.png","theme":"prompt"}};
+// 		return msg_card;
+// 	}
+// }
+// return response;

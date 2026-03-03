@@ -1,0 +1,129 @@
+
+// response = Map();
+// response.put("text","The bot menu handler is a great way to add more frequently used actions to your bot's chat!");
+// return response;
+response = Map();
+if(sub_action.equals("Create"))
+{
+	//////////////////////////////////////////////////////////////
+	instance_url = "https://openproject30.openproject.com/";
+	//////////////////////////////////////////////////////////////
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	info projectid_content;
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+	}
+	assignee_response = invokeurl
+	[
+		url :instance_url + "api/v3/users?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	assignee_map = Map();
+	assignee_list = List();
+	assignee_content = assignee_response.getFileContent().get("_embedded").get("elements");
+	for each  val in assignee_content
+	{
+		assignee_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		assignee_list.add(val.get("_links").get("self").get("title"));
+	}
+	parent_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent_map = Map();
+	parent_list = List();
+	parent_content = parent_response.getFileContent().get("_embedded").get("elements");
+	for each  val in parent_content
+	{
+		if(!val.get("_links").get("type").get("title").equals("Milestone"))
+		{
+			parent_type = val.get("_links").get("self").get("title") + " (" + val.get("_links").get("type").get("title") + ")";
+			parent_map.put(parent_type,val.get("_links").get("self").get("href"));
+			parent_list.add(parent_type);
+		}
+	}
+	projectphase_response = invokeurl
+	[
+		url :instance_url + "api/v3/project_phase_definitions?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectphase_map = Map();
+	projectphase_list = List();
+	projectphase_content = projectphase_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectphase_content
+	{
+		projectphase_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectphase_list.add(val.get("_links").get("self").get("title"));
+	}
+	workpackage_create = {"inputs":{{"min_length":"0","name":"subject","label":"Subject","placeholder":"Enter the subject for the work package","type":"text","mandatory":true,"max_length":"100"},{"min_length":"0","name":"description","label":"Description","placeholder":"Enter the description for the work package","type":"textarea","mandatory":false,"max_length":"100"},{"label":"Percentage Done","name":"percentage_done","placeholder":"Enter the percentage done","value":"0","min":"0","max":"100","mandatory":false,"type":"number"},{"name":"ignore_days","label":"Ignore non-working days ","type":"toggle","value":false},{"name":"project","trigger_on_change":true,"multiple":false,"options":{},"label":"Project","placeholder":"Choose the project from the list","type":"select","mandatory":true},{"label":"Project Phase","name":"project_phase","placeholder":"Choose the project phase from the list (Demo project only)","multiple":false,"mandatory":false,"type":"select","options":{}},{"name":"type","trigger_on_change":true,"multiple":false,"options":{{"label":"Task","value":"Task"},{"label":"Milestone","value":"Milestone"},{"label":"Summary task","value":"Summarytask"},{"label":"Feature","value":"Feature"},{"label":"Epic","value":"Epic"},{"label":"User story","value":"Userstory"},{"label":"Bug","value":"Bug"}},"label":"Type","placeholder":"Choose the type from the list","type":"select","mandatory":true},{"name":"priority","multiple":false,"options":{{"label":"Low","value":"Low"},{"label":"Normal","value":"Normal"},{"label":"High","value":"High"},{"label":"Immediate","value":"Immediate"}},"label":"Priority","placeholder":"Choose the priority from the list","type":"select","mandatory":false,"value":"Normal"},{"label":"Start Date","trigger_on_change":true,"name":"start_date","placeholder":"Enter the start date for the work package (except Milestone type)","mandatory":false,"type":"date"},{"label":"Due Date","trigger_on_change":true,"name":"due_date","placeholder":"Enter the due date for the work package (except Milestone type)","mandatory":false,"type":"date"},{"label":"Completion Date","name":"comp_date","placeholder":"Enter the completion date for the work package (Milestone type only)","mandatory":false,"type":"date"},{"label":"Parent Work Package","name":"parent","placeholder":"Choose the parent work package from the list","multiple":false,"mandatory":false,"type":"select","options":{}},{"name":"status","multiple":false,"options":{{"label":"New","value":"New"},{"label":"Specified","value":"Specified"},{"label":"Confirmed","value":"Confirmed"},{"label":"Scheduled","value":"Scheduled"},{"label":"In progress","value":"Inprogress"},{"label":"Developed","value":"Developed"},{"label":"Tested","value":"Tested"},{"label":"Closed","value":"Closed"},{"label":"On hold","value":"Onhold"},{"label":"Rejected","value":"Rejected"}},"label":"Status","placeholder":"Choose the status from the list","type":"select","mandatory":false,"value":"New"},{"name":"assignee","multiple":false,"options":{},"label":"Assignee","placeholder":"Choose the assignee from the list","type":"select","mandatory":true}},"hint":"Create Work Package","name":"create_workpackage","action":{"name":"createform","type":"invoke.function"},"button_label":"Submit","type":"form","title":"Create Work Package"};
+	projectphase = workpackage_create.get("inputs").get(5).get("options");
+	for each  val in projectphase_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval);
+		projectphase.add(optionMap);
+	}
+	parent = workpackage_create.get("inputs").get(11).get("options");
+	size = parent_list.size() - 1;
+	for each  val in parent_list
+	{
+		rev_val = parent_list.get(size);
+		optionMap = Map();
+		optionMap.put("label",rev_val);
+		newval = replaceAll(rev_val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		parent.add(optionMap);
+		size = size - 1;
+	}
+	content = workpackage_create.get("inputs").get(4).get("options");
+	for each  val in projectid_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		content.add(optionMap);
+	}
+	user = workpackage_create.get("inputs").get(13).get("options");
+	for each  val in assignee_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		user.add(optionMap);
+	}
+	return workpackage_create;
+}
+else if(sub_action.equals("Fetch"))
+{
+	workpackage_fetch = {"type":"form","title":"Fetch Work Package","name":"fetch_workpackage","hint":"Fetch Work Package","button_label":"Submit","inputs":{{"label":"Filter","name":"filter","trigger_on_change":true,"placeholder":"Choose a filter to get the work package","multiple":false,"mandatory":false,"type":"select","options":{{"value":"All","label":"All"},{"value":"Subject","label":"Subject"},{"value":"Project","label":"Project"},{"value":"Type","label":"Type"},{"value":"Priority","label":"Priority"},{"value":"StartDate","label":"Start Date"},{"value":"DueDate","label":"Due Date"},{"value":"CompletionDate","label":"Completion Date"},{"value":"CreatedOn","label":"Created On"},{"value":"UpdatedOn","label":"Updated On"},{"value":"Parent","label":"Parent"},{"value":"Assignee","label":"Assignee"}}}},"action":{"type":"invoke.function","name":"fetchworkpackage"}};
+	return workpackage_fetch;
+}
+else if(sub_action.equals("Update"))
+{
+	workpackage_update = {"type":"form","title":"Update Work Package","name":"update_workpackage","hint":"Update Work Package","button_label":"Submit","inputs":{{"label":"Filter","name":"filter","trigger_on_change":true,"placeholder":"Choose a filter to update the work package","multiple":false,"mandatory":false,"type":"select","options":{{"value":"All","label":"All"},{"value":"Subject","label":"Subject"},{"value":"Project","label":"Project"},{"value":"Type","label":"Type"},{"value":"Priority","label":"Priority"},{"value":"StartDate","label":"Start Date"},{"value":"DueDate","label":"Due Date"},{"value":"CompletionDate","label":"Completion Date"},{"value":"CreatedOn","label":"Created On"},{"value":"UpdatedOn","label":"Updated On"},{"value":"Parent","label":"Parent"},{"value":"Assignee","label":"Assignee"}}}},"action":{"type":"invoke.function","name":"updateworkpackage"}};
+	return workpackage_update;
+}
+else if(sub_action.equals("Delete"))
+{
+	workpackage_delete = {"type":"form","title":"Delete Work Package","name":"delete_workpackage","hint":"Delete Work Package","button_label":"Submit","inputs":{{"label":"Filter","name":"filter","trigger_on_change":true,"placeholder":"Choose a filter to delete the work package","multiple":false,"mandatory":false,"type":"select","options":{{"value":"All","label":"All"},{"value":"Subject","label":"Subject"},{"value":"Project","label":"Project"},{"value":"Type","label":"Type"},{"value":"Priority","label":"Priority"},{"value":"StartDate","label":"Start Date"},{"value":"DueDate","label":"Due Date"},{"value":"CompletionDate","label":"Completion Date"},{"value":"CreatedOn","label":"Created On"},{"value":"UpdatedOn","label":"Updated On"},{"value":"Parent","label":"Parent"},{"value":"Assignee","label":"Assignee"}}}},"action":{"type":"invoke.function","name":"deleteworkpackage"}};
+	return workpackage_delete;
+}
+return response;

@@ -1,0 +1,13 @@
+
+list = List();
+entry = Map();
+entry.put("title","View Comments");
+entry.put("description","To view comments and activities of a specific work package");
+entry.put("imageurl","https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png");
+list.add(entry);
+entry1 = Map();
+entry1.put("title","Add Comments");
+entry1.put("description","To add comments to a specific work package");
+entry1.put("imageurl","https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png");
+list.add(entry1);
+return list;

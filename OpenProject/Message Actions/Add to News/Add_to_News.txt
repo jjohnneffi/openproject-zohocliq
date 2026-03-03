@@ -1,0 +1,44 @@
+
+//The variable message will have the current message for which the action is triggered
+response = Map();
+///////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+///////////////////////////////////////////////////////////
+project_response = invokeurl
+[
+	url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+	type :GET
+	connection:"openproject"
+];
+msg = message.get("content").get("text");
+projectid_map = Map();
+projectid_list = List();
+project_ids = List();
+projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+for each  val in projectid_content
+{
+	projectid_map.put(val.get("_links").get("self").get("title"),val.get("id"));
+	projectid_list.add(val.get("_links").get("self").get("title"));
+	project_ids.add(val.get("id"));
+}
+if(msg.length() > 0 && msg.length() <= 60)
+{
+	news_form = {"type":"form","title":"Create News","name":"createnews","hint":"To create news","button_label":"Submit","inputs":{{"label":"Project","name":"project","placeholder":"Choose the project from the list","multiple":false,"mandatory":true,"type":"select","options":{}},{"label":"Title","value":msg,"name":"title","placeholder":"Enter the title for the news","min_length":"0","max_length":"60","mandatory":true,"type":"text"},{"label":"Summary","name":"summary","placeholder":"Enter the summary for the news","min_length":"0","max_length":"255","mandatory":true,"type":"textarea"},{"label":"Description","name":"description","placeholder":"Enter the description for the news","min_length":"0","max_length":"10000","mandatory":true,"type":"textarea"}},"action":{"type":"invoke.function","name":"createform"}};
+}
+else if(msg.length() > 60 && msg.length() <= 255)
+{
+	news_form = {"type":"form","title":"Create News","name":"createnews","hint":"To create news","button_label":"Submit","inputs":{{"label":"Project","name":"project","placeholder":"Choose the project from the list","multiple":false,"mandatory":true,"type":"select","options":{}},{"label":"Title","name":"title","placeholder":"Enter the title for the news","min_length":"0","max_length":"60","mandatory":true,"type":"text"},{"label":"Summary","value":msg,"name":"summary","placeholder":"Enter the summary for the news","min_length":"0","max_length":"255","mandatory":true,"type":"textarea"},{"label":"Description","name":"description","placeholder":"Enter the description for the news","min_length":"0","max_length":"10000","mandatory":true,"type":"textarea"}},"action":{"type":"invoke.function","name":"createform"}};
+}
+else if(msg.length() > 255 && msg.length() <= 10000)
+{
+	news_form = {"type":"form","title":"Create News","name":"createnews","hint":"To create news","button_label":"Submit","inputs":{{"label":"Project","name":"project","placeholder":"Choose the project from the list","multiple":false,"mandatory":true,"type":"select","options":{}},{"label":"Title","name":"title","placeholder":"Enter the title for the news","min_length":"0","max_length":"60","mandatory":true,"type":"text"},{"label":"Summary","name":"summary","placeholder":"Enter the summary for the news","min_length":"0","max_length":"255","mandatory":true,"type":"textarea"},{"label":"Description","name":"description","placeholder":"Enter the description for the news","value":msg,"min_length":"0","max_length":"10000","mandatory":true,"type":"textarea"}},"action":{"type":"invoke.function","name":"createform"}};
+}
+content = news_form.get("inputs").get(0).get("options");
+for each  val in projectid_list
+{
+	optionMap = Map();
+	optionMap.put("label",val);
+	optionMap.put("value",projectid_map.get(val));
+	content.add(optionMap);
+}
+return news_form;

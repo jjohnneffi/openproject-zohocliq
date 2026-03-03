@@ -1,0 +1,16 @@
+
+// Use this script to unregister the webhooks
+query_map = Map();
+zoho_userid = user.get("zoho_user_id");
+criteria_string = "userid==" + zoho_userid;
+query_map.put("criteria",criteria_string);
+response_map = zoho.cliq.getRecords("notificationsdb",query_map);
+record_id = 0;
+if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+{
+	record_id = response_map.get("list").get(0).get("id");
+}
+if(record_id.length() > 0)
+{
+	zoho.cliq.deleteRecord("notificationsdb",record_id);
+}

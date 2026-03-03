@@ -1,0 +1,278 @@
+
+////////////////////////////////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+////////////////////////////////////////////////////////////////////////////////////////////
+id = "dashboard";
+if(target.containKey("id"))
+{
+	id = target.get("id");
+}
+sections = list();
+tabsArr = {{"label":"Dashboard","id":"dashboard"},{"label":"Work Packages","id":"workpackages"},{"label":"Projects","id":"projects"},{"label":"Users","id":"users"},{"label":"Help","id":"help"}};
+if(id == "dashboard")
+{
+	imgUrls = {"https://images.pexels.com/photos/4792288/pexels-photo-4792288.jpeg","https://images.pexels.com/photos/357514/pexels-photo-357514.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2","https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=600","https://images.pexels.com/photos/10202989/pexels-photo-10202989.jpeg","https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg","https://images.pexels.com/photos/891059/pexels-photo-891059.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"};
+	titles = {"📝 Work Packages","🗂️ Projects","👨🏻‍💻 Users","🔔 Notifications","🗞️ News","🙋 Help"};
+	descriptions = {"Organize and monitor project tasks","Create and manage structured work packages","Add and manage people who access the system","To manage all your in-app notifications","Share project related updates and announcements","Access guidance and resources for using the system"};
+	header = {"title":"Dashboard","navigation":"new"};
+	dataList = list();
+	i = 0;
+	for each  imgUrl in imgUrls
+	{
+		eachData = Map();
+		eachData.put("title",titles.get(i));
+		eachData.put("description",descriptions.get(i));
+		eachData.put("image_url",imgUrls.get(i));
+		buttonList = List();
+		eachbutton = Map();
+		eachbutton.put("label","More");
+		eachbutton.put("type","invoke.function");
+		eachbutton.put("name","widgetbuttons");
+		eachbutton.put("emotion","positive");
+		eachbutton.put("id","dash##" + i);
+		buttonList.add(eachbutton);
+		eachData.put("buttons",buttonList);
+		dataList.add(eachData);
+		i = i + 1;
+	}
+	elements = list();
+	elements.add({"type":"title","text":"Unified Workspace to empower your projects"});
+	elements.add({"type":"text","text":"Boost your productivity and collaboration with OpenProject's integrated tools"});
+	elements.add({"type":"cards","data":dataList,"style":{"view":"gallery","size":"medium"}});
+	sections.add({"id":1,"elements":elements});
+	return {"type":"applet","tabs":tabsArr,"active_tab":id,"sections":sections,"header":header};
+}
+else if(id == "workpackages")
+{
+	sections = list();
+	header = {"title":"Work Packages","navigation":"new","buttons":{{"label":"+  Create","type":"invoke.function","name":"widgetbuttons","id":"createworkpackage#"},{"label":"Sort A–Z ↓","type":"invoke.function","name":"widgetbuttons","id":"filterworkpackage#"}}};
+	package_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	content = package_response.getFileContent();
+	number = 0;
+	if(content.get("_type").equals("WorkPackageCollection"))
+	{
+		values = content.get("_embedded").get("elements");
+		length = values.size() - 1;
+		sec_id = 1;
+		elements = list();
+		for each  val in values
+		{
+			if(number < 4 && length >= 0 && sec_id <= 25)
+			{
+				details = values.get(length);
+				subject = details.get("subject");
+				package_id = details.get("id");
+				createdate = details.get("createdAt").subString(0,10);
+				createdate1 = toDate(createdate,"yyyy-MM-dd");
+				elements.add({"type":"title","text":"📝" + subject,"buttons":{{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewworkpackage#" + package_id},{"label":"Update","type":"invoke.function","name":"widgetbuttons","id":"updateworkpackage#" + package_id},{"label":"Delete","type":"invoke.function","name":"widgetbuttons","id":"deleteworkpackage#" + package_id},{"label":"Set Reminder","type":"invoke.function","name":"widgetbuttons","id":"reminderworkpackage#" + package_id},{"label":"Comment","type":"invoke.function","name":"widgetbuttons","id":"commentworkpackage#" + package_id}}});
+				elements.add({"type":"text","text":"Work Package ID: " + package_id});
+				elements.add({"type":"subtext","text":"Created on " + createdate1});
+				elements.add({"type":"divider"});
+				length = length - 1;
+				number = number + 1;
+				if(number == 4 && length >= 0 && sec_id <= 25)
+				{
+					sections.add({"id":sec_id,"elements":elements});
+					sec_id = sec_id + 1;
+					elements = list();
+					number = 0;
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+		if(sec_id <= 25 && elements.length() != 0)
+		{
+			sections.add({"id":sec_id,"elements":elements});
+		}
+		if(sections.length() == 0)
+		{
+			elements = list();
+			elements.add({"type":"text","text":"No work packages found"});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+	}
+	return {"type":"applet","header":header,"tabs":tabsArr,"active_tab":id,"sections":sections};
+}
+else if(id == "projects")
+{
+	sections = list();
+	header = {"title":"Projects","navigation":"new","buttons":{{"label":"+  Create","type":"invoke.function","name":"widgetbuttons","id":"createproject#"},{"label":"Sort A–Z ↓","type":"invoke.function","name":"widgetbuttons","id":"filterproject#"}}};
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	content = project_response.getFileContent();
+	number = 0;
+	if(content.get("_type").equals("Collection"))
+	{
+		values = content.get("_embedded").get("elements");
+		sec_id = 1;
+		elements = list();
+		for each  details in values
+		{
+			if(number < 4 && sec_id <= 25)
+			{
+				name = details.get("name");
+				project_id = details.get("id");
+				createdate = details.get("createdAt").subString(0,10);
+				createdate1 = toDate(createdate,"yyyy-MM-dd");
+				elements.add({"type":"title","text":"🗂️" + name,"buttons":{{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewproject#" + project_id},{"label":"Update","type":"invoke.function","name":"widgetbuttons","id":"updateproject#" + project_id},{"label":"Delete","type":"invoke.function","name":"widgetbuttons","id":"deleteproject#" + project_id},{"label":"Mark as Favorite","type":"invoke.function","name":"widgetbuttons","id":"favorite#" + project_id},{"label":"Create News","type":"invoke.function","name":"widgetbuttons","id":"addnews#" + project_id}}});
+				elements.add({"type":"text","text":"Project ID: " + project_id});
+				elements.add({"type":"subtext","text":"Created on " + createdate1});
+				elements.add({"type":"divider"});
+				number = number + 1;
+				if(number == 4 && sec_id <= 25)
+				{
+					sections.add({"id":sec_id,"elements":elements});
+					sec_id = sec_id + 1;
+					elements = list();
+					number = 0;
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+		if(sec_id <= 25 && elements.length() != 0)
+		{
+			sections.add({"id":sec_id,"elements":elements});
+		}
+		if(sections.length() == 0)
+		{
+			elements = list();
+			elements.add({"type":"text","text":"No projects found"});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+	}
+	return {"type":"applet","header":header,"tabs":tabsArr,"active_tab":id,"sections":sections};
+}
+else if(id == "users")
+{
+	sections = List();
+	header = {"title":"Users","navigation":"new","buttons":{{"label":"+  Add","type":"invoke.function","name":"widgetbuttons","id":"adduser#"},{"label":"Sort A–Z ↓","type":"invoke.function","name":"widgetbuttons","id":"filteruser#"}}};
+	imgUrl = "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2";
+	user_response = invokeurl
+	[
+		url :instance_url + "api/v3/users?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	content = user_response.getFileContent();
+	dataList = list();
+	datalist_count = 0;
+	sec_id = 1;
+	if(content.get("_type").equals("Collection"))
+	{
+		values = content.get("_embedded").get("elements");
+		for each  val in values
+		{
+			if(datalist_count < 15 && sec_id <= 25)
+			{
+				eachData = Map();
+				user_id = val.get("id");
+				name = val.get("name");
+				eachData.put("title",name);
+				eachData.put("description","ID: " + user_id);
+				eachData.put("image_url",imgUrl);
+				buttonList = {{"label":"View","type":"invoke.function","name":"widgetbuttons","id":"viewuser#" + user_id,"emotion":"positive"},{"label":"Edit","type":"invoke.function","name":"widgetbuttons","id":"edituser#" + user_id,"emotion":"positive"},{"label":"Remove","type":"invoke.function","name":"widgetbuttons","id":"removeuser#" + user_id,"emotion":"negative"}};
+				all_response = invokeurl
+				[
+					url :instance_url + "api/v3/users/" + user_id
+					type :GET
+					connection:"openproject"
+				];
+				content = all_response.getFileContent();
+				if(content.get("_links").containsKey("lock"))
+				{
+					lock_content = {"label":"Lock User","type":"invoke.function","name":"widgetbuttons","id":"lockuser#" + user_id,"emotion":"negative"};
+					buttonList.add(lock_content);
+					eachData.put("buttons",buttonList);
+				}
+				else if(content.get("_links").containsKey("unlock"))
+				{
+					unlock_content = {"label":"Unlock User","type":"invoke.function","name":"widgetbuttons","id":"unlockuser#" + user_id,"emotion":"positive"};
+					buttonList.add(unlock_content);
+					eachData.put("buttons",buttonList);
+				}
+				else
+				{
+					eachData.put("buttons",buttonList);
+				}
+				dataList.add(eachData);
+				datalist_count = datalist_count + 1;
+				if(datalist_count == 15 && sec_id <= 25)
+				{
+					elements = list();
+					elements.add({"type":"cards","data":dataList,"style":{"view":"gallery","size":"small"}});
+					sections.add({"id":sec_id,"elements":elements});
+					dataList = list();
+					datalist_count = 0;
+					sec_id = sec_id + 1;
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+		if(sec_id <= 25 && dataList.length() != 0)
+		{
+			elements = list();
+			elements.add({"type":"cards","data":dataList,"style":{"view":"gallery","size":"small"}});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+		if(sections.length() == 0)
+		{
+			elements = list();
+			elements.add({"type":"text","text":"No users found"});
+			sections.add({"id":sec_id,"elements":elements});
+		}
+	}
+	return {"type":"applet","tabs":tabsArr,"header":header,"active_tab":id,"sections":sections};
+}
+else if(id == "help")
+{
+	header = {"title":"Help"};
+	elements = list();
+	elements.add({"type":"text","text":"It’s the OpenProject extension — a collaborative project management platform that helps you organize projects, track work, and stay aligned with your team. Now, let’s explore all the components integrated within Zoho Cliq."});
+	elements.add({"type":"divider"});
+	elements.add({"type":"title","text":"OpenProject Bot"});
+	elements.add({"type":"fields","data":{{"Work Packages":"To create, fetch, update, and delete work packages from the system, enabling complete management of task-related data."},{"Projects":"To create, view, update, and delete projects within the system, ensuring complete control over project-related information."},{"Users":"To add, view, edit, and remove users, allowing efficient management of user information and access."},{"Reminders":"To list and create work-package-related reminders and to receive timely in-app notifications for better task tracking and follow-up."},{"News":"To create, view, modify, and delete project-related news updates."}},"style":{"short":false}});
+	elements.add({"type":"divider"});
+	elements.add({"type":"title","text":"OpenProject Widget"});
+	elements.add({"type":"fields","data":{{"Dashboard":"Provides a centralized space where you can access and manage all key components, including work packages, projects, users, notifications, news, and the help section."},{"Work Packages":"Manage and track all work-package–related activities, with a clear visual layout to monitor progress effectively."},{"Projects":"Manage and oversee all project-related activities, with a streamlined view to review and track project progress."},{"Users":"Maintain and track all user-related information, with an organized overview to review specific access permissions."},{"Help":"Provides comprehensive guidance for using the extension, with detailed instructions for each component."}},"style":{"short":false}});
+	elements.add({"type":"divider"});
+	elements.add({"type":"title","text":"Slash Commands"});
+	elements.add({"type":"fields","data":{{"/workpackage":"Allows viewing, updating, and deleting watchers for a work package, enabling instant workflow."},{"/project":"View project details and easily mark or unmark projects as favorites."},{"/user":"Used to view user details and to lock or unlock user access as needed."},{"/commentpack":"Used to view activities and add comments to a work package"}},"style":{"short":false}});
+	elements.add({"type":"divider"});
+	elements.add({"type":"title","text":"Message Actions"});
+	elements.add({"type":"fields","data":{{"Add to News":"Used to create a news update and associate it with a specific project."},{"Add to Reminder":"Allows to set a reminder for a specific work package, ensuring timely follow-up on important tasks."},{"Post to Work         Package":"Enables to add comments to a specific work package, facilitating communication and collaboration."},{"Create Task":"Allows creating Task-type work packages for organized task management."}},"style":{"short":false}});
+	elements.add({"type":"divider"});
+	elements.add({"type":"title","text":"Schedulers"});
+	elements.add({"type":"fields","data":{{"reminders":"Notifies you everyday with reminders from the application."}},"style":{"short":false}});
+	elements.add({"type":"divider"});
+	sections = list();
+	sections.add({"id":1,"elements":elements});
+	elements1 = list();
+	elements1.add({"type":"divider"});
+	elements1.add({"type":"title","text":"Connections"});
+	elements1.add({"type":"fields","data":{{"openproject":"Provides seamless integration with OpenProject using OAuth 2.0 authentication, allowing secure access to project data, user information, and other resources."}},"style":{"short":false}});
+	elements1.add({"type":"divider"});
+	elements1.add({"type":"title","text":"Additional Information"});
+	elements1.add({"type":"fields","data":{{"New Users":"Before installing the extension, we recommend new users to create an account in OpenProject for a hassle-free setup."},{"Users":"Be careful about self-locking or self-removal which means locking your own account or removing yourself, which will restrict access to all extension functions but it can be unlocked or recovered by another accessible user."},{"Error Handling":"All possible user errors are handled thoroughly, with detailed explanations and technical information to support future extension development."},{"Data Center":"This extension is compatible with accounts linked to the US data center (zoho.com)."}},"style":{"short":false}});
+	elements1.add({"type":"divider"});
+	sections.add({"id":2,"elements":elements1});
+	return {"type":"applet","tabs":tabsArr,"header":header,"active_tab":id,"sections":sections};
+}
+return {"type":"applet","tabs":tabsArr,"active_tab":id,"sections":sections};

@@ -1,0 +1,165 @@
+
+response = Map();
+//////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+///////////////////////////////////////////////////////////////////
+if(form.get("name").equals("create_workpackage") || form.get("name").equals("create_workpackage#"))
+{
+	targetName = target.get("name");
+	inputValues = form.get("values");
+	actions = list();
+	info targetName;
+	info inputValues;
+	if(targetName.containsIgnoreCase("project"))
+	{
+		project = inputValues.get("project").get("label");
+		project_value = inputValues.get("project").get("value");
+		if(project_value.equalsIgnoreCase("Demoproject"))
+		{
+			actions.add({"type":"enable","name":"project_phase"});
+		}
+		else
+		{
+			actions.add({"type":"clear","name":"project_phase"});
+			actions.add({"type":"disable","name":"project_phase"});
+		}
+		project_response = invokeurl
+		[
+			url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+			type :GET
+			connection:"openproject"
+		];
+		projectid_map = Map();
+		projectid_list = List();
+		projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+		for each  val in projectid_content
+		{
+			projectid_map.put(val.get("name"),val.get("id"));
+			projectid_list.add(val.get("name"));
+		}
+		id = projectid_map.get(project);
+		type_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects/" + id + "/types?pageSize=100"
+			type :GET
+			connection:"openproject"
+		];
+		elements = type_response.getFileContent().get("_embedded").get("elements");
+		optionsList = List();
+		for each  val in elements
+		{
+			optionMap = Map();
+			optionMap.put("label",val.get("name"));
+			newval = replaceAll(val.get("name")," ","");
+			optionMap.put("value",newval);
+			optionsList.add(optionMap);
+		}
+		content = {"name":"type","trigger_on_change":true,"multiple":false,"options":optionsList,"label":"Type","placeholder":"Choose the type from the list","type":"select","mandatory":true};
+		actions.add({"type":"update","name":"type","input":content});
+		assignee_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects/" + id + "/available_assignees?pageSize=100"
+			type :GET
+			connection:"openproject"
+		];
+		elements = assignee_response.getFileContent().get("_embedded").get("elements");
+		optionsList = List();
+		for each  val in elements
+		{
+			optionMap = Map();
+			optionMap.put("label",val.get("name"));
+			newval = replaceAll(val.get("name")," ","");
+			optionMap.put("value",newval.getAlphaNumeric());
+			optionsList.add(optionMap);
+		}
+		content = {"name":"assignee","multiple":false,"options":optionsList,"label":"Assignee","placeholder":"Choose the assignee from the list","type":"select","mandatory":true};
+		actions.add({"type":"update","name":"assignee","input":content});
+	}
+	if(targetName.containsIgnoreCase("start_date"))
+	{
+		startdate = inputValues.get("start_date");
+		if(inputValues.get("due_date").isNull())
+		{
+			duedate = {"label":"Due Date","trigger_on_change":true,"name":"due_date","placeholder":"Enter the due date for the work package (except Milestone Type)","filter":{"from":startdate},"mandatory":false,"type":"date"};
+			actions.add({"type":"update","name":"due_date","input":duedate});
+		}
+		else
+		{
+			duedate = inputValues.get("due_date");
+			startdate1 = toDate(startdate,"yyyy-MM-dd");
+			duedate1 = toDate(duedate,"yyyy-MM-dd");
+			if(startdate1 > duedate1)
+			{
+				duedate = {"label":"Due Date","trigger_on_change":true,"name":"due_date","placeholder":"Enter the due date for the work package (except Milestone Type)","filter":{"from":startdate},"mandatory":false,"type":"date"};
+				actions.add({"type":"update","name":"due_date","input":duedate});
+			}
+		}
+	}
+	if(targetName.containsIgnoreCase("due_date"))
+	{
+		duedate = inputValues.get("due_date");
+		if(inputValues.get("start_date").isNull())
+		{
+			startdate = {"label":"Start Date","trigger_on_change":true,"name":"start_date","placeholder":"Enter the start date for the work package (except Milestone Type)","filter":{"to":duedate},"mandatory":false,"type":"date"};
+			actions.add({"type":"update","name":"start_date","input":startdate});
+		}
+		else
+		{
+			startdate = inputValues.get("start_date");
+			startdate1 = toDate(startdate,"yyyy-MM-dd");
+			duedate1 = toDate(duedate,"yyyy-MM-dd");
+			if(startdate1 > duedate1)
+			{
+				startdate = {"label":"Start Date","trigger_on_change":true,"name":"start_date","placeholder":"Enter the start date for the work package (except Milestone Type)","filter":{"to":duedate},"mandatory":false,"type":"date"};
+				actions.add({"type":"update","name":"start_date","input":startdate});
+			}
+		}
+	}
+	if(targetName.containsIgnoreCase("type") && inputValues.get("type").get("value").equalsIgnoreCase("Milestone"))
+	{
+		actions.add({"type":"clear","name":"start_date"});
+		actions.add({"type":"clear","name":"due_date"});
+		actions.add({"type":"disable","name":"start_date"});
+		actions.add({"type":"disable","name":"due_date"});
+		actions.add({"type":"enable","name":"comp_date"});
+	}
+	if(targetName.containsIgnoreCase("type") && !inputValues.get("type").get("value").equalsIgnoreCase("Milestone"))
+	{
+		actions.add({"type":"enable","name":"start_date"});
+		actions.add({"type":"enable","name":"due_date"});
+		actions.add({"type":"clear","name":"comp_date"});
+		actions.add({"type":"disable","name":"comp_date"});
+	}
+	return {"type":"form_modification","actions":actions};
+}
+if(form.get("name").equals("add_user") || form.get("name").equals("add_user#"))
+{
+	targetName = target.get("name");
+	inputValues = form.get("values");
+	actions = list();
+	info targetName;
+	info inputValues;
+	if(targetName.containsIgnoreCase("status"))
+	{
+		login_input = {"label":"Login ID","name":"login","placeholder":"Set the login ID for the user","min_length":"0","max_length":"50","mandatory":true,"type":"text"};
+		password_input = {"label":"Password","name":"password","placeholder":"Set the password for the user (min 10 characters)","min_length":"0","max_length":"50","mandatory":true,"type":"text","format":"password"};
+		status_value = inputValues.get("status").get("value");
+		if(status_value.equalsIgnoreCase("Active"))
+		{
+			actions.add({"type":"update","name":"login","input":login_input});
+			actions.add({"type":"update","name":"password","input":password_input});
+			actions.add({"type":"enable","name":"login"});
+			actions.add({"type":"enable","name":"password"});
+		}
+		if(status_value.equalsIgnoreCase("Invited"))
+		{
+			actions.add({"type":"update","name":"login","input":{"label":"Login ID","name":"login","placeholder":"Set the login ID for the user","min_length":"0","max_length":"50","mandatory":false,"type":"text"}});
+			actions.add({"type":"update","name":"password","input":{"label":"Password","name":"password","placeholder":"Set the password for the user (min 10 characters)","min_length":"0","max_length":"50","mandatory":false,"type":"text","format":"password"}});
+			actions.add({"type":"clear","name":"login"});
+			actions.add({"type":"disable","name":"login"});
+			actions.add({"type":"clear","name":"password"});
+			actions.add({"type":"disable","name":"password"});
+		}
+	}
+}
+return {"type":"form_modification","actions":actions};

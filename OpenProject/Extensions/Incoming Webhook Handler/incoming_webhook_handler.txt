@@ -1,0 +1,148 @@
+
+// You can post message to the channels or bots bundled within this extension
+response = Map();
+info user;
+info body;
+query_map = Map();
+record_id = user.get("zoho_user_id");
+criteria_string = "userid==" + record_id;
+query_map.put("criteria",criteria_string);
+response_map = zoho.cliq.getRecords("notificationsdb",query_map);
+info response_map;
+record_id = 0;
+// if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+// {
+// 	channel_unique_name = response_map.get("list").get(0).get("channeluniquename");
+// }
+channel_unique_name = "announcements";
+result = body.toMap();
+info result;
+if(result.get("action").equals("work_package:created"))
+{
+	work_package_id = result.get("work_package").get("id");
+	work_package_name = result.get("work_package").get("subject");
+	response = {"text":"New Work Package Created (#" + work_package_id + " " + work_package_name + ")"};
+	channel_list = invokeurl
+	[
+		url :"https://cliq.zoho.com/api/v2/channelsbyname/" + channel_unique_name + "/message"
+		type :POST
+		body:response.toString()
+		headers:{"content-type":"application/json"}
+		connection:"zohocliq"
+	];
+	info channel_list;
+}
+else if(result.get("action").equals("work_package:updated"))
+{
+	work_package_id = result.get("work_package").get("id");
+	work_package_name = result.get("work_package").get("subject");
+	response = {"text":"Work Package Updated (#" + work_package_id + " " + work_package_name + ")"};
+	channel_list = invokeurl
+	[
+		url :"https://cliq.zoho.com/api/v2/channelsbyname/" + channel_unique_name + "/message"
+		type :POST
+		body:response.toString()
+		headers:{"content-type":"application/json"}
+		connection:"zohocliq"
+	];
+	info channel_list;
+	// 	zoho.cliq.postToChannel(channel_unique_name, response, "openproject"); 
+	// 	zoho.cliq.postToBot("openproject", response); 
+}
+else if(result.get("action").equals("project:created"))
+{
+	project_id = result.get("project").get("id");
+	project_name = result.get("project").get("name");
+	response = {"text":"New Project Created (#" + project_id + " " + project_name + ")"};
+	channel_list = invokeurl
+	[
+		url :"https://cliq.zoho.com/api/v2/channelsbyname/" + channel_unique_name + "/message"
+		type :POST
+		body:response.toString()
+		headers:{"content-type":"application/json"}
+		connection:"zohocliq"
+	];
+	info channel_list;
+}
+else if(result.get("action").equals("project:updated"))
+{
+	project_id = result.get("project").get("id");
+	project_name = result.get("project").get("name");
+	response = {"text":"Project Updated (#" + project_id + " " + project_name + ")"};
+	channel_list = invokeurl
+	[
+		url :"https://cliq.zoho.com/api/v2/channelsbyname/" + channel_unique_name + "/message"
+		type :POST
+		body:response.toString()
+		headers:{"content-type":"application/json"}
+		connection:"zohocliq"
+	];
+	info channel_list;
+}
+// project:updated, project:created, work_package:updated, work_package:created, work_package_comment:comment, work_package_comment:internal_comment, time_entry:created, attachment:created
+else if(result.get("action").equals("work_package_comment:comment"))
+{
+	work_package_id = result.get("work_package").get("id");
+	work_package_name = result.get("work_package").get("subject");
+	response = {"text":"Work Package Commented (#" + work_package_id + " " + work_package_name + ")"};
+	channel_list = invokeurl
+	[
+		url :"https://cliq.zoho.com/api/v2/channelsbyname/" + channel_unique_name + "/message"
+		type :POST
+		body:response.toString()
+		headers:{"content-type":"application/json"}
+		connection:"zohocliq"
+	];
+	info channel_list;
+}
+else if(result.get("action").equals("work_package_comment:internal_comment"))
+{
+	work_package_id = result.get("work_package").get("id");
+	work_package_name = result.get("work_package").get("subject");
+	response = {"text":"Internal Comment added to Work Package (#" + work_package_id + " " + work_package_name + ")"};
+	channel_list = invokeurl
+	[
+		url :"https://cliq.zoho.com/api/v2/channelsbyname/" + channel_unique_name + "/message"
+		type :POST
+		body:response.toString()
+		headers:{"content-type":"application/json"}
+		connection:"zohocliq"
+	];
+	info channel_list;
+}
+else if(result.get("action").equals("time_entry:created"))
+{
+	response = {"text":"Time Entry Created"};
+	channel_list = invokeurl
+	[
+		url :"https://cliq.zoho.com/api/v2/channelsbyname/" + channel_unique_name + "/message"
+		type :POST
+		body:response.toString()
+		headers:{"content-type":"application/json"}
+		connection:"zohocliq"
+	];
+	info channel_list;
+}
+else if(result.get("action").equals("attachment:created"))
+{
+	response = {"text":"Attachment Created"};
+	channel_list = invokeurl
+	[
+		url :"https://cliq.zoho.com/api/v2/channelsbyname/" + channel_unique_name + "/message"
+		type :POST
+		body:response.toString()
+		headers:{"content-type":"application/json"}
+		connection:"zohocliq"
+	];
+	info channel_list;
+}
+// channel_list = invokeurl
+// [
+// 	url :"https://cliq.zoho.com/api/v2/channelsbyname/" + "announcements" + "/message"
+// 	type :POST
+// 	parameters:content.toString()
+// 	headers:{"content-type":"application/json"}
+// 	connection:"zohocliq"
+// ];
+// info channel_list;
+return Map();

@@ -1,0 +1,269 @@
+
+response = Map();
+formValues = form.get("values");
+/////////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+/////////////////////////////////////////////////////////////////////
+if(form.get("name").startsWith("@#"))
+{
+	upd_id = form.get("name").subString(2);
+	info formValues;
+	name = formValues.get("name");
+	description = formValues.get("description");
+	active = formValues.get("active");
+	public = formValues.get("public");
+	status = formValues.get("status").get("label");
+	status_explanation = formValues.get("status_explanation");
+	parent = formValues.get("parent").get("label");
+	identifier_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + upd_id
+		type :GET
+		connection:"openproject"
+	];
+	identifier = identifier_response.getFileContent().get("identifier");
+	parent_title = null;
+	parent_href = null;
+	if(!parent.isNull())
+	{
+		available_parent = invokeurl
+		[
+			url :instance_url + "api/v3/projects/available_parent_projects"
+			type :GET
+			connection:"openproject"
+		];
+		parent_list = available_parent.getFileContent().get("_embedded").get("elements");
+		for each  value in parent_list
+		{
+			if(value.get("_links").get("self").get("title").equals(parent))
+			{
+				parent_title = value.get("_links").get("self").get("title");
+				parent_href = value.get("_links").get("self").get("href");
+			}
+		}
+	}
+	status_title = null;
+	status_href = null;
+	if(!status.isNull())
+	{
+		project = invokeurl
+		[
+			url :instance_url + "api/v3/projects/form"
+			type :POST
+			headers:{"content-type":"application/json"}
+			connection:"openproject"
+		];
+		status_list = project.getFileContent().get("_embedded").get("schema").get("status").get("_links").get("allowedValues");
+		for each  value in status_list
+		{
+			if(value.get("title").equals(status))
+			{
+				status_title = value.get("title");
+				status_href = value.get("href");
+			}
+		}
+	}
+	content = {"identifier":identifier,"name":name,"active":active,"public":public,"description":{"format":"markdown","raw":description,"html":""},"statusExplanation":{"format":"markdown","raw":status_explanation,"html":""},"_links":{"parent":{"title":parent_title,"href":parent_href},"status":{"title":status_title,"href":status_href}}};
+	info content;
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+	project_form = invokeurl
+	[
+		url :"https://openproject30.openproject.com/api/v3/projects/" + upd_id
+		type :PATCH
+		parameters:content.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	output = project_form.getFileContent();
+	info output;
+	if(output.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_banner = {"type":"banner","status":"failure","text":"Error occurred while updating the project"};
+		return error_banner;
+	}
+	else if(output.get("_type").equalsIgnoreCase("Project"))
+	{
+		id = output.get("id");
+		name = output.get("name");
+		identifier = output.get("identifier");
+		active = output.get("active");
+		if(active == true)
+		{
+			active = "Yes";
+		}
+		else if(active == false)
+		{
+			active = "No";
+		}
+		public = output.get("public");
+		if(public == true)
+		{
+			public = "Yes";
+		}
+		else if(public == false)
+		{
+			public = "No";
+		}
+		description = output.get("description").get("raw");
+		createdate = output.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = output.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		status_explanation = output.get("statusExplanation").get("raw");
+		status_check = output.get("_links").get("status").get("href");
+		status = "";
+		if(!status_check.isNull())
+		{
+			status = output.get("_links").get("status").get("title");
+		}
+		parent_check = output.get("_links").get("parent").get("href");
+		parent = "";
+		if(!parent_check.isNull())
+		{
+			parent = output.get("_links").get("parent").get("title");
+		}
+		success_banner = {"type":"banner","status":"success","text":"Project (# " + id + ") has been updated successfully"};
+		return success_banner;
+	}
+}
+else
+{
+	id = form.get("name");
+	info formValues;
+	name = formValues.get("name");
+	description = formValues.get("description");
+	active = formValues.get("active");
+	public = formValues.get("public");
+	status = formValues.get("status").get("label");
+	status_explanation = formValues.get("status_explanation");
+	parent = formValues.get("parent").get("label");
+	identifier_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + id
+		type :GET
+		connection:"openproject"
+	];
+	identifier = identifier_response.getFileContent().get("identifier");
+	parent_title = null;
+	parent_href = null;
+	if(!parent.isNull())
+	{
+		available_parent = invokeurl
+		[
+			url :instance_url + "api/v3/projects/available_parent_projects"
+			type :GET
+			connection:"openproject"
+		];
+		parent_list = available_parent.getFileContent().get("_embedded").get("elements");
+		for each  value in parent_list
+		{
+			if(value.get("_links").get("self").get("title").equals(parent))
+			{
+				parent_title = value.get("_links").get("self").get("title");
+				parent_href = value.get("_links").get("self").get("href");
+			}
+		}
+	}
+	status_title = null;
+	status_href = null;
+	if(!status.isNull())
+	{
+		project = invokeurl
+		[
+			url :instance_url + "api/v3/projects/form"
+			type :POST
+			headers:{"content-type":"application/json"}
+			connection:"openproject"
+		];
+		status_list = project.getFileContent().get("_embedded").get("schema").get("status").get("_links").get("allowedValues");
+		for each  value in status_list
+		{
+			if(value.get("title").equals(status))
+			{
+				status_title = value.get("title");
+				status_href = value.get("href");
+			}
+		}
+	}
+	content = {"identifier":identifier,"name":name,"active":active,"public":public,"description":{"format":"markdown","raw":description,"html":""},"statusExplanation":{"format":"markdown","raw":status_explanation,"html":""},"_links":{"parent":{"title":parent_title,"href":parent_href},"status":{"title":status_title,"href":status_href}}};
+	info content;
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+	project_form = invokeurl
+	[
+		url :"https://openproject30.openproject.com/api/v3/projects/" + form.get("name")
+		type :PATCH
+		parameters:content.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	output = project_form.getFileContent();
+	info output;
+	if(output.get("_type").equalsIgnoreCase("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(output.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = output.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while updating the project" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":output.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(output.get("errorIdentifier")) + "\n(Error Identifier: " + output.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(output.get("_type").equalsIgnoreCase("Project"))
+	{
+		id = output.get("id");
+		name = output.get("name");
+		identifier = output.get("identifier");
+		active = output.get("active");
+		if(active == true)
+		{
+			active = "Yes";
+		}
+		else if(active == false)
+		{
+			active = "No";
+		}
+		public = output.get("public");
+		if(public == true)
+		{
+			public = "Yes";
+		}
+		else if(public == false)
+		{
+			public = "No";
+		}
+		description = output.get("description").get("raw");
+		createdate = output.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = output.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		status_explanation = output.get("statusExplanation").get("raw");
+		status_check = output.get("_links").get("status").get("href");
+		status = "";
+		if(!status_check.isNull())
+		{
+			status = output.get("_links").get("status").get("title");
+		}
+		parent_check = output.get("_links").get("parent").get("href");
+		parent = "";
+		if(!parent_check.isNull())
+		{
+			parent = output.get("_links").get("parent").get("title");
+		}
+		success_card = {"text":"Project updated successfully\n(Tap the card to view project details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"},"slides":{{"type":"table","title":name,"data":{"headers":{"Id","Name","Identifier","Description","Created\n At","Updated At","Active Project","Public Project","Status","Status Explanation","Parent Project"},"rows":{{"Id":id,"Name":name,"Identifier":identifier,"Description":description,"Created\n At":createdate1,"Updated At":update1,"Active Project":active,"Public Project":public,"Status":status,"Status Explanation":status_explanation,"Parent Project":parent}}}}}};
+		return success_card;
+	}
+}
+return response;

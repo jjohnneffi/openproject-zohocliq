@@ -1,0 +1,15 @@
+// Sample script to update record
+values_map = Map(); 
+values_map.put("projectid", "123"); 
+// Set values for other fields if required 
+query_map = Map(); 
+criteria_string="projectid==123"; 
+query_map.put("criteria",criteria_string); 
+response_map=zoho.cliq.getRecords("notificationsdb", query_map); 
+record_id=0; 
+if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size()>0){ 
+    record_id=response_map.get("list").get(0).get("id"); 
+} 
+if(record_id.length() > 0){ 
+    response_map=zoho.cliq.updateRecord("notificationsdb", record_id, values_map); 
+}

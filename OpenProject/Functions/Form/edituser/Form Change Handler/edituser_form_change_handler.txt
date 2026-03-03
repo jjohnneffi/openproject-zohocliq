@@ -1,0 +1,155 @@
+
+targetName = target.get("name");
+info targetName;
+inputValues = form.get("values");
+info inputValues;
+actions = list();
+/////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+/////////////////////////////////////////////////////////////////
+if(targetName.containsIgnoreCase("filter"))
+{
+	if(inputValues.get("filter").equalsIgnoreCase("{}"))
+	{
+		actions.add({"type":"remove","name":"name"});
+		actions.add({"type":"remove","name":"email"});
+		actions.add({"type":"remove","name":"created_on"});
+		actions.add({"type":"remove","name":"updated_on"});
+		actions.add({"type":"remove","name":"admin"});
+		actions.add({"type":"remove","name":"status"});
+	}
+	else
+	{
+		options = inputValues.get("filter");
+		if(options.get("label").equalsIgnoreCase("All"))
+		{
+			actions.add({"type":"remove","name":"name"});
+			actions.add({"type":"remove","name":"email"});
+			actions.add({"type":"remove","name":"created_on"});
+			actions.add({"type":"remove","name":"updated_on"});
+			actions.add({"type":"remove","name":"admin"});
+			actions.add({"type":"remove","name":"status"});
+		}
+		if(options.get("label").equalsIgnoreCase("Name"))
+		{
+			user_response = invokeurl
+			[
+				url :instance_url + "api/v3/users"
+				type :GET
+				connection:"openproject"
+			];
+			name_list = List();
+			content = user_response.getFileContent().get("_embedded").get("elements");
+			for each  val in content
+			{
+				if(!name_list.contains(val.get("name")))
+				{
+					name_list.add(val.get("name"));
+				}
+			}
+			content_list = List();
+			for each  val in name_list
+			{
+				optionMap = Map();
+				optionMap.put("label",val);
+				newval = replaceAll(val," ","");
+				optionMap.put("value",newval.getAlphaNumeric());
+				content_list.add(optionMap);
+			}
+			name_content = {"label":"Name","name":"name","placeholder":"Choose the name from the list","multiple":false,"mandatory":true,"type":"select","options":content_list};
+			actions.add({"type":"add_after","name":"filter","input":name_content});
+		}
+		else
+		{
+			actions.add({"type":"remove","name":"name"});
+		}
+		if(options.get("label").equalsIgnoreCase("Email"))
+		{
+			user_response = invokeurl
+			[
+				url :instance_url + "api/v3/users"
+				type :GET
+				connection:"openproject"
+			];
+			email_list = List();
+			content = user_response.getFileContent().get("_embedded").get("elements");
+			for each  val in content
+			{
+				if(!email_list.contains(val.get("email")))
+				{
+					email_list.add(val.get("email"));
+				}
+			}
+			content_list = List();
+			for each  val in email_list
+			{
+				optionMap = Map();
+				optionMap.put("label",val);
+				new_val = replaceAll(val," ","");
+				optionMap.put("value",new_val.getAlphaNumeric());
+				content_list.add(optionMap);
+			}
+			email_content = {"label":"Email","name":"email","placeholder":"Choose the email from the list","multiple":false,"mandatory":true,"type":"select","options":content_list};
+			actions.add({"type":"add_after","name":"filter","input":email_content});
+		}
+		else
+		{
+			actions.add({"type":"remove","name":"email"});
+		}
+		if(options.get("label").equalsIgnoreCase("Created On"))
+		{
+			createdon = {"label":"Created On","name":"created_on","placeholder":"Enter the date the user was created","mandatory":true,"type":"date"};
+			actions.add({"type":"add_after","name":"filter","input":createdon});
+		}
+		else
+		{
+			actions.add({"type":"remove","name":"created_on"});
+		}
+		if(options.get("label").equalsIgnoreCase("Updated On"))
+		{
+			updatedon = {"label":"Updated On","name":"updated_on","placeholder":"Enter the date the user was last updated","mandatory":true,"type":"date"};
+			actions.add({"type":"add_after","name":"filter","input":updatedon});
+		}
+		else
+		{
+			actions.add({"type":"remove","name":"updated_on"});
+		}
+		if(options.get("label").equalsIgnoreCase("Admin (True)"))
+		{
+			actions.add({"type":"remove","name":"name"});
+			actions.add({"type":"remove","name":"email"});
+			actions.add({"type":"remove","name":"created_on"});
+			actions.add({"type":"remove","name":"updated_on"});
+			actions.add({"type":"remove","name":"admin"});
+			actions.add({"type":"remove","name":"status"});
+		}
+		if(options.get("label").equalsIgnoreCase("Admin (False)"))
+		{
+			actions.add({"type":"remove","name":"name"});
+			actions.add({"type":"remove","name":"email"});
+			actions.add({"type":"remove","name":"created_on"});
+			actions.add({"type":"remove","name":"updated_on"});
+			actions.add({"type":"remove","name":"admin"});
+			actions.add({"type":"remove","name":"status"});
+		}
+		if(options.get("label").equalsIgnoreCase("Status (Active)"))
+		{
+			actions.add({"type":"remove","name":"name"});
+			actions.add({"type":"remove","name":"email"});
+			actions.add({"type":"remove","name":"created_on"});
+			actions.add({"type":"remove","name":"updated_on"});
+			actions.add({"type":"remove","name":"admin"});
+			actions.add({"type":"remove","name":"status"});
+		}
+		if(options.get("label").equalsIgnoreCase("Status (Invited)"))
+		{
+			actions.add({"type":"remove","name":"name"});
+			actions.add({"type":"remove","name":"email"});
+			actions.add({"type":"remove","name":"created_on"});
+			actions.add({"type":"remove","name":"updated_on"});
+			actions.add({"type":"remove","name":"admin"});
+			actions.add({"type":"remove","name":"status"});
+		}
+	}
+}
+return {"type":"form_modification","actions":actions};

@@ -1,0 +1,36 @@
+
+//The variable message will have the current message for which the action is triggered
+response = Map();
+//////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+//////////////////////////////////////////////////////////////
+msg = message.get("content").get("text");
+package_response = invokeurl
+[
+	url :instance_url + "api/v3/work_packages?pageSize=100"
+	type :GET
+	connection:"openproject"
+];
+id_list = List();
+package_list = List();
+package_content = package_response.getFileContent().get("_embedded").get("elements");
+for each  val in package_content
+{
+	package_type = val.get("_links").get("self").get("title") + " (" + val.get("_links").get("type").get("title") + ")";
+	id_list.add(val.get("id"));
+	package_list.add(package_type);
+}
+info package_list;
+create_remind = {"type":"form","title":"Reminders","name":"reminders","hint":"Add reminders to work package","button_label":"Submit","inputs":{{"label":"Work Package","name":"workpackage","placeholder":"Choose the work package from the list","multiple":false,"mandatory":true,"type":"select","options":{}},{"label":"Note","name":"note","value":msg,"placeholder":"Enter the note for the reminder","min_length":"0","max_length":"50","mandatory":true,"type":"textarea"},{"label":"Remind At","name":"remindat","placeholder":"Select when you'd like to be reminded","mandatory":true,"type":"datetime"}},"action":{"type":"invoke.function","name":"createform"}};
+package = create_remind.get("inputs").get(0).get("options");
+size = package_list.size() - 1;
+for each  val in package_list
+{
+	rev_val = package_list.get(size);
+	optionMap = Map();
+	optionMap.put("label",rev_val);
+	optionMap.put("value",id_list.get(size));
+	package.add(optionMap);
+	size = size - 1;
+}
+return create_remind;

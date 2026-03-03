@@ -1,0 +1,2046 @@
+
+// Use the below given instant button's syntax to see how the function code is invoked! 
+// [What's this?](invoke.function|authorize)
+// response = Map();
+// response.put("text","Isn't the instant button super fantabulous? 😲\nFunctions work with buttons. There are two types of buttons - Message Card Buttons and Instant Buttons.");
+// return response;
+response = Map();
+info arguments;
+////////////////////////////////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+////////////////////////////////////////////////////////////////////////////////////////////
+if(arguments.get("key") == "start_user")
+{
+	card = {"text":"Hello *" + user.get("first_name") + "* ! Before dive in, check out the options below. Make sure your extension is properly configured, or tap Help to get a quick gist of what this extension can do. ","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"theme":"modern-inline"},"buttons":{{"label":"Configure","hint":"Ensure that your extension is properly configured","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"configure"},{"label":"Help","hint":"To know about this extension","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"help"}}};
+	return card;
+}
+if(arguments.get("key") == "read_all")
+{
+	read_response = invokeurl
+	[
+		url :instance_url + "api/v3/notifications/read_ian"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = read_response.getFileContent();
+	if(!content.isNull() && read_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while marking all the notifications as read" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else
+	{
+		success_card = {"text":"All notifications has been marked as read","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"}};
+		return success_card;
+	}
+}
+if(arguments.get("key") == "unread_all")
+{
+	unread_response = invokeurl
+	[
+		url :instance_url + "api/v3/notifications/unread_ian"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = unread_response.getFileContent();
+	if(!content.isNull() && unread_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while marking all the notifications as unread" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else
+	{
+		success_card = {"text":"All notifications has been marked as unread","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313152.png","theme":"prompt"}};
+		return success_card;
+	}
+}
+if(arguments.get("key") == "configure")
+{
+	api_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects"
+		type :GET
+		connection:"openproject"
+	];
+	channel_list = invokeurl
+	[
+		url :"https://cliq.zoho.com/api/v2/channels?joined=true"
+		type :GET
+		connection:"zohocliq"
+	];
+	if(api_response.getFileContent().get("_type").equals("Collection") && channel_list.get("channels").length() >= 0)
+	{
+		card = {"text":"You have already *successfully configured*. If you want to reconfigure, go to Connections, revoke, and then reconnect the OpenProject service connection.","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"theme":"modern-inline"}};
+		return card;
+	}
+	else
+	{
+		card = {"text":"You haven't configured the extension properly. Please try again from *Connections* by *revoking* and *reconnecting* the OpenProject service connection.","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"theme":"modern-inline"}};
+		return card;
+	}
+}
+if(arguments.get("key") == "help")
+{
+	helpCard = {"text":"Features in OpenProject extension.","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"Help:","theme":"modern-inline"},"slides":{{"type":"list","title":"Features","data":{"Access and organize projects, each having multiple work packages.","View, manage, and track work packages.","Manage users and their roles.","Refer the Help section in Widgets for more component–specific functionalities."}}}};
+	return helpCard;
+}
+if(target.get("name").startsWith("Details  #"))
+{
+	name_str = target.get("name");
+	check = false;
+	ids_part = name_str.subString(9);
+	clean = ids_part.replaceAll("#","");
+	spaceIndex = clean.indexOf(" ");
+	if(spaceIndex > -1)
+	{
+		id1 = clean.subString(0,spaceIndex);
+		id2 = clean.subString(spaceIndex + 1);
+	}
+	else
+	{
+		id1 = clean;
+		id2 = "";
+	}
+	workpackage_id = id1;
+	activity_id = id2;
+	details_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + workpackage_id + "/activities"
+		type :GET
+		connection:"openproject"
+	];
+	content = details_response.getFileContent();
+	if(content.get("_type").equals("Collection"))
+	{
+		value = content.get("_embedded").get("elements");
+		slide_total = List();
+		slide_content = Map();
+		slide_content.put("type","text");
+		slide_content.put("title","");
+		num = 1;
+		text_content = "";
+		for each  val in value
+		{
+			if(val.get("_type").equals("Activity") && val.get("id") == activity_id)
+			{
+				total_details = val.get("details");
+				for each  sentence in total_details
+				{
+					text_content = text_content + num + ") " + sentence.get("raw") + "\n";
+					num = num + 1;
+					check = true;
+				}
+			}
+		}
+		if(!check)
+		{
+			text_content = "No details found";
+		}
+		slide_content.put("data",text_content);
+		slide_total.add(slide_content);
+		response_card = {"text":"Activity - Details","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"theme":"prompt"},"slides":slide_total};
+		return response_card;
+	}
+}
+if(target.get("name").startsWith("Details   #"))
+{
+	name_str = target.get("name");
+	check = false;
+	ids_part = name_str.subString(10);
+	clean = ids_part.replaceAll("#","");
+	spaceIndex = clean.indexOf(" ");
+	if(spaceIndex > -1)
+	{
+		id1 = clean.subString(0,spaceIndex);
+		id2 = clean.subString(spaceIndex + 1);
+	}
+	else
+	{
+		id1 = clean;
+		id2 = "";
+	}
+	workpackage_id = id1;
+	comment_id = id2;
+	details_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + workpackage_id + "/activities"
+		type :GET
+		connection:"openproject"
+	];
+	content = details_response.getFileContent();
+	if(content.get("_type").equals("Collection"))
+	{
+		value = content.get("_embedded").get("elements");
+		slide_total = List();
+		slide_content = Map();
+		slide_content.put("type","text");
+		slide_content.put("title","");
+		num = 1;
+		text_content = "";
+		for each  val in value
+		{
+			if(val.get("_type").equals("Activity::Comment") && val.get("id") == comment_id)
+			{
+				total_details = val.get("details");
+				for each  sentence in total_details
+				{
+					text_content = text_content + num + ") " + sentence.get("raw") + "\n";
+					num = num + 1;
+					check = true;
+				}
+			}
+		}
+		if(!check)
+		{
+			text_content = "No details found";
+		}
+		slide_content.put("data",text_content);
+		slide_total.add(slide_content);
+		response_card = {"text":"Activity::Comment - Details","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"theme":"prompt"},"slides":slide_total};
+		return response_card;
+	}
+}
+if(target.get("name").startsWith("Read  #"))
+{
+	read_name = target.get("name").subString(0,4);
+	read_id = target.get("name").subString(7);
+	read_response = invokeurl
+	[
+		url :instance_url + "api/v3/notifications/" + read_id + "/read_ian"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = read_response.getFileContent();
+	if(!content.isNull() && read_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while marking the notification as read" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else
+	{
+		success_card = {"text":"Notification #" + read_id + " has been marked as read","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"}};
+		return success_card;
+	}
+}
+if(target.get("name").startsWith("Unread  #"))
+{
+	unread_name = target.get("name").subString(0,6);
+	unread_id = target.get("name").subString(9);
+	unread_response = invokeurl
+	[
+		url :instance_url + "api/v3/notifications/" + unread_id + "/unread_ian"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = unread_response.getFileContent();
+	if(!content.isNull() && unread_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while marking the notification as unread" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else
+	{
+		success_card = {"text":"Notification #" + unread_id + " has been marked as unread","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313152.png","theme":"prompt"}};
+		return success_card;
+	}
+}
+if(target.get("name").startsWith("View  #"))
+{
+	name = target.get("name").subString(0,4);
+	id = target.get("name").subString(7,target.get("name").length());
+	view_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + id
+		type :GET
+		connection:"openproject"
+	];
+	content = view_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while viewing the work package details" + "\n (Tap the card for more details)","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else
+	{
+		id = content.get("id");
+		subject = content.get("subject");
+		description = content.get("description").get("raw");
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		percent = content.get("percentageDone");
+		ignore = content.get("ignoreNonWorkingDays");
+		type = content.get("_links").get("type").get("title");
+		priority = content.get("_links").get("priority").get("title");
+		project = content.get("_links").get("project").get("title");
+		status = content.get("_links").get("status").get("title");
+		assignee = content.get("_links").get("assignee").get("title");
+		author = content.get("_links").get("author").get("title");
+		parent = content.get("_links").get("parent").get("title");
+		project_phase_def = content.get("_links").get("projectPhaseDefinition").get("title");
+		if(content.get("startDate").isNull())
+		{
+			start_date1 = "";
+		}
+		else
+		{
+			start_date = content.get("startDate");
+			start_date1 = toDate(start_date,"yyyy-MM-dd");
+		}
+		if(content.get("dueDate").isNull())
+		{
+			due_date1 = "";
+		}
+		else
+		{
+			due_date = content.get("dueDate");
+			due_date1 = toDate(due_date,"yyyy-MM-dd");
+		}
+		if(content.get("date").isNull())
+		{
+			comp_date1 = "";
+		}
+		else
+		{
+			comp_date = content.get("date");
+			comp_date1 = toDate(comp_date,"yyyy-MM-dd");
+		}
+		ig = Map();
+		ig.put(true,"Yes");
+		ig.put(false,"No");
+		if(description.equals(""))
+		{
+			desc = "";
+		}
+		else
+		{
+			desc = description;
+		}
+		if(percent == null)
+		{
+			per = 0;
+		}
+		else
+		{
+			per = percent;
+		}
+		if(assignee.isNull())
+		{
+			assignee = "";
+		}
+		if(project_phase_def.isNull())
+		{
+			project_phase_def = "";
+		}
+		if(parent.isNull())
+		{
+			parent = "";
+		}
+		if(status.isNull())
+		{
+			status = "";
+		}
+		if(priority.isNull())
+		{
+			priority = "";
+		}
+		success_card = {"text":"Work package details","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"},"slides":{{"type":"table","title":subject,"data":{"headers":{"Id","Subject","Description","Created\n At","Updated At","Percentage Done","Ignore non working days","Type","Priority","Project","Project Phase","Start Date","Due Date","Completion Date","Parent Work Package","Status","Author","Assignee"},"rows":{{"Id":id,"Subject":subject,"Description":desc,"Created\n At":createdate1,"Updated At":update1,"Percentage Done":per + "%","Ignore non working days":ig.get(ignore),"Type":type,"Priority":priority,"Project":project,"Project Phase":project_phase_def,"Start Date":start_date1,"Due Date":due_date1,"Completion Date":comp_date1,"Parent Work Package":parent,"Status":status,"Author":author,"Assignee":assignee}}}}}};
+		return success_card;
+	}
+}
+if(target.get("name").startsWith("Update  #"))
+{
+	upd_name = target.get("name").subString(0,6);
+	upd_id = target.get("name").subString(9,target.get("name").length());
+	view_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + upd_id
+		type :GET
+		connection:"openproject"
+	];
+	content = view_response.getFileContent();
+	info content;
+	id = content.get("id");
+	subject = content.get("subject");
+	description = content.get("description").get("raw");
+	percent = content.get("percentageDone");
+	ignore = content.get("ignoreNonWorkingDays");
+	type = content.get("_links").get("type").get("title");
+	priority = content.get("_links").get("priority").get("title");
+	project = content.get("_links").get("project").get("title");
+	status = content.get("_links").get("status").get("title");
+	assignee = content.get("_links").get("assignee").get("title");
+	parent = content.get("_links").get("parent").get("title");
+	project_phase_def = content.get("_links").get("projectPhaseDefinition").get("title");
+	new_project = replaceAll(project," ","");
+	new_project_phase_def = replaceAll(project_phase_def," ","");
+	new_status = "";
+	new_type = replaceAll(type," ","");
+	new_parent = "";
+	new_assignee = "";
+	comp_date = "";
+	start_date = "";
+	due_date = "";
+	if(!assignee.isNull())
+	{
+		new_assignee = replaceAll(assignee," ","");
+	}
+	if(!status.isNull())
+	{
+		new_status = replaceAll(status," ","");
+	}
+	if(!parent.isNull())
+	{
+		instance = instance_url.subString(0,instance_url.length() - 1);
+		parent_response = invokeurl
+		[
+			url :instance + content.get("_links").get("parent").get("href")
+			type :GET
+			connection:"openproject"
+		];
+		parent_type = parent_response.getFileContent().get("_links").get("type").get("title");
+		new_parent_type = replaceAll(parent_type," ","");
+		new_parent = replaceAll(parent," ","").getAlphaNumeric() + new_parent_type;
+	}
+	if(!type.equals("Milestone"))
+	{
+		if(content.get("startDate").isNull())
+		{
+			start_date = "";
+		}
+		else
+		{
+			start_date = content.get("startDate");
+		}
+		if(content.get("dueDate").isNull())
+		{
+			due_date = "";
+		}
+		else
+		{
+			due_date = content.get("dueDate");
+		}
+	}
+	else
+	{
+		if(content.get("date").isNull())
+		{
+			comp_date = "";
+		}
+		else
+		{
+			comp_date = content.get("date");
+		}
+	}
+	if(percent.isNull())
+	{
+		percent = "";
+	}
+	if(description.equals(""))
+	{
+		desc = "";
+	}
+	else
+	{
+		desc = description;
+	}
+	if(new_project_phase_def.isNull())
+	{
+		new_project_phase_def = "";
+	}
+	if(new_parent.isNull())
+	{
+		new_parent = "";
+	}
+	if(status.isNull())
+	{
+		status = "";
+	}
+	if(priority.isNull())
+	{
+		priority = "";
+	}
+	///////////////////////////////////////////////////////////////////
+	instance_url = "https://openproject30.openproject.com/";
+	///////////////////////////////////////////////////////////////////
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+	}
+	assignee_response = invokeurl
+	[
+		url :instance_url + "api/v3/users?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	assignee_map = Map();
+	assignee_list = List();
+	assignee_content = assignee_response.getFileContent().get("_embedded").get("elements");
+	for each  val in assignee_content
+	{
+		assignee_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		assignee_list.add(val.get("_links").get("self").get("title"));
+	}
+	parent_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent_map = Map();
+	parent_list = List();
+	parent_content = parent_response.getFileContent().get("_embedded").get("elements");
+	for each  val in parent_content
+	{
+		if(!val.get("_links").get("type").get("title").equals("Milestone"))
+		{
+			parent_type = val.get("_links").get("self").get("title") + " (" + val.get("_links").get("type").get("title") + ")";
+			parent_map.put(parent_type,val.get("_links").get("self").get("href"));
+			parent_list.add(parent_type);
+		}
+	}
+	projectphase_response = invokeurl
+	[
+		url :instance_url + "api/v3/project_phase_definitions?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectphase_map = Map();
+	projectphase_list = List();
+	projectphase_content = projectphase_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectphase_content
+	{
+		projectphase_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+		projectphase_list.add(val.get("_links").get("self").get("title"));
+	}
+	workpackage_update = {"inputs":{{"min_length":"0","name":"subject","label":"Subject","placeholder":"Update the subject for the work package","type":"text","mandatory":true,"value":subject,"max_length":"100"},{"min_length":"0","name":"description","label":"Description","placeholder":"Update the description for the work package","type":"textarea","mandatory":false,"value":desc,"max_length":"100"},{"label":"Percentage Done","name":"percentage_done","placeholder":"Update the percentage done","value":percent,"min":"0","max":"100","mandatory":false,"value":percent,"type":"number"},{"name":"ignore_days","label":"Ignore non-working days ","type":"toggle","value":ignore},{"name":"project","trigger_on_change":true,"multiple":false,"options":{},"label":"Project","placeholder":"Update the project from the list","type":"select","mandatory":true,"value":new_project},{"label":"Project Phase","name":"project_phase","placeholder":"Update the project phase from the list (Demo project only)","multiple":false,"mandatory":false,"value":new_project_phase_def,"type":"select","options":{}},{"name":"type","trigger_on_change":true,"multiple":false,"options":{{"label":"Task","value":"Task"},{"label":"Milestone","value":"Milestone"},{"label":"Summary task","value":"Summarytask"},{"label":"Feature","value":"Feature"},{"label":"Epic","value":"Epic"},{"label":"User story","value":"Userstory"},{"label":"Bug","value":"Bug"}},"label":"Type","placeholder":"Update the type from the list","type":"select","mandatory":true,"value":new_type},{"name":"priority","multiple":false,"options":{{"label":"Low","value":"Low"},{"label":"Normal","value":"Normal"},{"label":"High","value":"High"},{"label":"Immediate","value":"Immediate"}},"label":"Priority","placeholder":"Update the priority from the list","type":"select","mandatory":false,"value":priority},{"label":"Start Date","trigger_on_change":true,"name":"start_date","placeholder":"Update the start date for the work package (except Milestone type)","mandatory":false,"type":"date","value":start_date},{"label":"Due Date","trigger_on_change":true,"name":"due_date","placeholder":"Update the due date for the work package (except Milestone type)","mandatory":false,"type":"date","value":due_date},{"label":"Completion Date","name":"comp_date","placeholder":"Update the completion date for the work package (Milestone type only)","mandatory":false,"type":"date","value":comp_date},{"label":"Parent Work Package","name":"parent","placeholder":"Update the parent work package from the list","multiple":false,"mandatory":false,"value":new_parent,"type":"select","options":{}},{"name":"status","multiple":false,"options":{{"label":"New","value":"New"},{"label":"Specified","value":"Specified"},{"label":"Confirmed","value":"Confirmed"},{"label":"Scheduled","value":"Scheduled"},{"label":"In progress","value":"Inprogress"},{"label":"Developed","value":"Developed"},{"label":"Tested","value":"Tested"},{"label":"Closed","value":"Closed"},{"label":"On hold","value":"Onhold"},{"label":"Rejected","value":"Rejected"}},"label":"Status","placeholder":"Update the status from the list","type":"select","mandatory":false,"value":new_status},{"name":"assignee","multiple":false,"options":{},"label":"Assignee","placeholder":"Update the assignee from the list","type":"select","mandatory":false,"value":new_assignee}},"hint":"Update Work Package","name":upd_id,"action":{"name":"updatepackage","type":"invoke.function"},"button_label":"Submit","type":"form","title":"Update Work Package"};
+	info workpackage_update;
+	projectphase = workpackage_update.get("inputs").get(5).get("options");
+	for each  val in projectphase_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval);
+		projectphase.add(optionMap);
+	}
+	parent = workpackage_update.get("inputs").get(11).get("options");
+	size = parent_list.size() - 1;
+	for each  val in parent_list
+	{
+		rev_val = parent_list.get(size);
+		optionMap = Map();
+		optionMap.put("label",rev_val);
+		newval = replaceAll(rev_val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		parent.add(optionMap);
+		size = size - 1;
+	}
+	content = workpackage_update.get("inputs").get(4).get("options");
+	for each  val in projectid_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		content.add(optionMap);
+	}
+	user = workpackage_update.get("inputs").get(13).get("options");
+	for each  val in assignee_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		newval = replaceAll(val," ","");
+		optionMap.put("value",newval.getAlphaNumeric());
+		user.add(optionMap);
+	}
+	return workpackage_update;
+}
+if(target.get("name").startsWith("Delete  #"))
+{
+	del_name = target.get("name").subString(0,6);
+	del_id = target.get("name").subString(9);
+	confirm_delete = {"text":"Are you sure you want to delete this workpackage #" + del_id + "?","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"buttons":{{"label":"Cancel","hint":"To cancel the deletion of work package","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"cancel_workpackage-" + del_id},{"label":"Delete","hint":"To delete the work package","type":"-","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"delete_workpackage-" + del_id}}};
+	return confirm_delete;
+}
+if(target.get("name").startsWith("View #"))
+{
+	name = target.get("name").subString(0,4);
+	id = target.get("name").subString(6,target.get("name").length());
+	view_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + id
+		type :GET
+		connection:"openproject"
+	];
+	output = view_response.getFileContent();
+	if(output.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(output.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while viewing the project details" + "\n (Tap the card for more details)","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":output.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(output.get("errorIdentifier")) + "\n(Error Identifier: " + output.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else
+	{
+		id = output.get("id");
+		name = output.get("name");
+		identifier = output.get("identifier");
+		active = output.get("active");
+		if(active == true)
+		{
+			active = "Yes";
+		}
+		else if(active == false)
+		{
+			active = "No";
+		}
+		public = output.get("public");
+		if(public == true)
+		{
+			public = "Yes";
+		}
+		else if(public == false)
+		{
+			public = "No";
+		}
+		description = output.get("description").get("raw");
+		createdate = output.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = output.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		status_explanation = output.get("statusExplanation").get("raw");
+		status_check = output.get("_links").get("status").get("href");
+		status = "";
+		if(!status_check.isNull())
+		{
+			status = output.get("_links").get("status").get("title");
+		}
+		parent_check = output.get("_links").get("parent").get("href");
+		parent = "";
+		if(!parent_check.isNull())
+		{
+			parent = output.get("_links").get("parent").get("title");
+		}
+		success_card = {"text":"Project details","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"},"slides":{{"type":"table","title":name,"data":{"headers":{"Id","Name","Identifier","Description","Created\n At","Updated At","Active Project","Public Project","Status","Status Explanation","Parent Project"},"rows":{{"Id":id,"Name":name,"Identifier":identifier,"Description":description,"Created\n At":createdate1,"Updated At":update1,"Active Project":active,"Public Project":public,"Status":status,"Status Explanation":status_explanation,"Parent Project":parent}}}}}};
+		return success_card;
+	}
+}
+if(target.get("name").startsWith("Update #"))
+{
+	upd_name = target.get("name").subString(0,6);
+	upd_id = target.get("name").subString(8,target.get("name").length());
+	view_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + upd_id
+		type :GET
+		connection:"openproject"
+	];
+	output = view_response.getFileContent();
+	info output;
+	id = output.get("id");
+	name = output.get("name");
+	identifier = output.get("identifier");
+	active = output.get("active");
+	public = output.get("public");
+	description = output.get("description").get("raw");
+	createdate = output.get("createdAt").subString(0,10);
+	createdate1 = toDate(createdate,"yyyy-MM-dd");
+	update = output.get("updatedAt").subString(0,10);
+	update1 = toDate(update,"yyyy-MM-dd");
+	status_explanation = output.get("statusExplanation").get("raw");
+	status_check = output.get("_links").get("status").get("href");
+	status = "";
+	new_status = "";
+	if(!status_check.isNull())
+	{
+		status = output.get("_links").get("status").get("title");
+		new_status = replaceAll(status," ","");
+	}
+	parent_check = output.get("_links").get("parent").get("href");
+	parent = "";
+	new_parent = "";
+	if(!parent_check.isNull())
+	{
+		parent = output.get("_links").get("parent").get("title");
+		new_parent = replaceAll(parent," ","");
+	}
+	project_form = {"type":"form","title":"Update Project","name":upd_id,"hint":"Update Project","button_label":"Submit","inputs":{{"label":"Name","name":"name","value":name,"placeholder":"Update the name for the project","min_length":"0","max_length":"100","mandatory":true,"type":"text"},{"label":"Description","name":"description","value":description,"placeholder":"Update the description for the project","min_length":"0","max_length":"100","mandatory":false,"type":"textarea"},{"label":"Active Project","name":"active","value":active,"hint":"Indicates whether the project is currently active or already archived","type":"toggle"},{"label":"Public Project","name":"public","value":public,"hint":"Indicates whether the project is accessible for everybody","type":"toggle"},{"label":"Status","name":"status","value":new_status,"placeholder":"Update the status from the list","multiple":false,"mandatory":false,"type":"dynamic_select","options":{}},{"label":"Status Explanation","name":"status_explanation","value":status_explanation,"placeholder":"Update the status explanation for the project","min_length":"0","max_length":"100","mandatory":false,"type":"textarea"},{"label":"Parent","name":"parent","value":new_parent,"placeholder":"Update the parent project from the list","multiple":false,"mandatory":false,"type":"select","options":{}}},"action":{"type":"invoke.function","name":"updateprojectform"}};
+	project = invokeurl
+	[
+		url :instance_url + "api/v3/projects/form"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	status_options = project_form.get("inputs").get(4).get("options");
+	parent_options = project_form.get("inputs").get(6).get("options");
+	status = project.getFileContent().get("_embedded").get("schema").get("status").get("_links").get("allowedValues");
+	status_map = Map();
+	for each  value in status
+	{
+		content = Map();
+		content.put("label",value.get("title"));
+		new_status = replaceAll(value.get("title")," ","");
+		content.put("value",new_status);
+		status_map.put(value.get("title"),value.get("href"));
+		status_options.add(content);
+	}
+	available_parent = invokeurl
+	[
+		url :instance_url + "api/v3/projects/available_parent_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	parent = available_parent.getFileContent().get("_embedded").get("elements");
+	parent_map = Map();
+	for each  value in parent
+	{
+		content = Map();
+		content.put("label",value.get("_links").get("self").get("title"));
+		new_parent = replaceAll(value.get("_links").get("self").get("title")," ","");
+		content.put("value",new_parent.getAlphaNumeric());
+		parent_map.put(value.get("_links").get("self").get("title"),value.get("_links").get("self").get("href"));
+		parent_options.add(content);
+	}
+	return project_form;
+}
+if(target.get("name").startsWith("Delete #"))
+{
+	del_name = target.get("name").subString(0,6);
+	del_id = target.get("name").subString(8);
+	confirm_delete = {"text":"Are you sure you want to delete this project #" + del_id + "?","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"buttons":{{"label":"Cancel","hint":"To cancel the deletion of project","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"cancel_project-" + del_id},{"label":"Delete","hint":"To delete the project","type":"-","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"delete_project-" + del_id}}};
+	return confirm_delete;
+}
+if(target.get("name").startsWith("View   #"))
+{
+	name = target.get("name").subString(0,4);
+	id = target.get("name").subString(8,target.get("name").length());
+	view_response = invokeurl
+	[
+		url :instance_url + "api/v3/users/" + id
+		type :GET
+		connection:"openproject"
+	];
+	content = view_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while viewing the user details" + "\n (Tap the card for more details)","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else
+	{
+		id = content.get("id");
+		name = content.get("name");
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		login = content.get("login");
+		ig = Map();
+		ig.put(true,"Yes");
+		ig.put(false,"No");
+		stat = Map();
+		stat.put("active","Active");
+		stat.put("invited","Invited");
+		admin = ig.get(content.get("admin"));
+		firstName = content.get("firstName");
+		lastName = content.get("lastName");
+		email = content.get("email");
+		status = stat.get(content.get("status"));
+		success_card = {"text":"User details","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"slides":{{"type":"table","title":name,"data":{"headers":{"Id","Name","Created\n At","Updated At","Login","Admin","First Name","Last Name","Email","Status"},"rows":{{"Id":id,"Name":name,"Created\n At":createdate1,"Updated At":update1,"Login":login,"Admin":admin,"First Name":firstName,"Last Name":lastName,"Email":email,"Status":status}}}}}};
+		return success_card;
+	}
+}
+if(target.get("name").startsWith("Update   #"))
+{
+	name = target.get("name").subString(0,6);
+	id = target.get("name").subString(10,target.get("name").length());
+	update_response = invokeurl
+	[
+		url :instance_url + "api/v3/users/" + id
+		type :GET
+		connection:"openproject"
+	];
+	content = update_response.getFileContent();
+	id = content.get("id");
+	name = content.get("name");
+	createdate = content.get("createdAt").subString(0,10);
+	createdate1 = toDate(createdate,"yyyy-MM-dd");
+	update = content.get("updatedAt").subString(0,10);
+	update1 = toDate(update,"yyyy-MM-dd");
+	login = content.get("login");
+	ig = Map();
+	ig.put(true,"Yes");
+	ig.put(false,"No");
+	stat = Map();
+	stat.put("active","Active");
+	stat.put("invited","Invited");
+	admon = content.get("admin");
+	admin = ig.get(content.get("admin"));
+	firstName = content.get("firstName");
+	lastName = content.get("lastName");
+	email = content.get("email");
+	status = stat.get(content.get("status"));
+	edit_user = {"type":"form","title":"Edit User","name":id,"hint":"Edit User","button_label":"Submit","inputs":{{"label":"First Name","name":"firstName","value":firstName,"placeholder":"Update user's first name","min_length":"0","max_length":"50","mandatory":true,"type":"text"},{"label":"Last Name","name":"lastName","value":lastName,"placeholder":"Update user's last name","min_length":"0","max_length":"50","mandatory":true,"type":"text"},{"label":"Admin","name":"admin","value":admon,"hint":"Grants the user full administrative priviledges","type":"toggle"}},"action":{"type":"invoke.function","name":"edituserform"}};
+	return edit_user;
+}
+if(target.get("name").startsWith("Delete   #"))
+{
+	del_name = target.get("name").subString(0,6);
+	del_id = target.get("name").subString(10);
+	confirm_delete = {"text":"Are you sure you want to remove this user #" + del_id + "?","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6325/6325109.png","theme":"prompt"},"buttons":{{"label":"Cancel","hint":"To cancel the user removal","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"cancel_user-" + del_id},{"label":"Delete","hint":"To remove the user","type":"-","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"delete_user-" + del_id}}};
+	return confirm_delete;
+}
+if(target.get("name").startsWith("Remove #"))
+{
+	remove_name = target.get("name").subString(0,6);
+	remove_id = target.get("name").subString(8);
+	unfav_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + remove_id + "favorite"
+		type :DELETE
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	flag = false;
+	content = unfav_response.getFileContent();
+	if(unfav_response.getFileContent().contains("_Error") && unfav_response.getFileContent().get("_type").equals("Error"))
+	{
+		flag = true;
+		check = true;
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while removing project from favorites" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	if(!flag)
+	{
+		delete_card = {"text":"Project #" + remove_id + " has been removed from favorites","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/128/1828/1828970.png","theme":"prompt"}};
+		return delete_card;
+	}
+}
+if(target.get("name").startsWith("Add #"))
+{
+	remove_name = target.get("name").subString(0,3);
+	remove_id = target.get("name").subString(5);
+	fav_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + remove_id + "favorite"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	flag = false;
+	content = fav_response.getFileContent();
+	if(fav_response.getFileContent().contains("_Error") && fav_response.getFileContent().get("_type").equals("Error"))
+	{
+		flag = true;
+		check = true;
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while adding project to favorites" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	if(!flag)
+	{
+		delete_card = {"text":"Project #" + remove_id + " has been added to favorites","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/6948/6948362.png","theme":"prompt"}};
+		return delete_card;
+	}
+}
+if(target.get("name").startsWith("List   #"))
+{
+	view_content = list();
+	list_name = target.get("name").subString(0,4);
+	list_id = target.get("name").subString(8);
+	name_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + list_id
+		type :GET
+		connection:"openproject"
+	];
+	response_name = name_response.getFileContent();
+	response_subject = response_name.get("subject");
+	list_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + list_id + "/watchers?pageSize=49"
+		type :GET
+		connection:"openproject"
+	];
+	content = list_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while fetching watchers for a work package" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(content.get("_type").equals("Collection"))
+	{
+		details = content.get("_embedded").get("elements");
+		for each  val in details
+		{
+			if(val.get("_type").equals("User"))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				if(val.get("firstName").isNull() || val.get("firstName").equals(""))
+				{
+					column.put("First Name","-");
+				}
+				else
+				{
+					column.put("First Name",val.get("firstName"));
+				}
+				if(val.get("lastName").isNull() || val.get("lastName").equals(""))
+				{
+					column.put("Last Name","-");
+				}
+				else
+				{
+					column.put("Last Name",val.get("lastName"));
+				}
+				createdate = val.get("createdAt").subString(0,10);
+				createdate1 = toDate(createdate,"yyyy-MM-dd");
+				column.put("Created At",createdate1);
+				update = val.get("updatedAt").subString(0,10);
+				update1 = toDate(update,"yyyy-MM-dd");
+				column.put("Updated At",update1);
+				if(val.get("login").isNull() || val.get("login").equals(""))
+				{
+					column.put("Login","-");
+				}
+				else
+				{
+					column.put("Login",val.get("login"));
+				}
+				if(val.get("email").isNull() || val.get("email").equals(""))
+				{
+					column.put("Email","-");
+				}
+				else
+				{
+					column.put("Email",val.get("email"));
+				}
+				ig = Map();
+				ig.put("active","Active");
+				ig.put("invited","Invited");
+				column.put("Status",ig.get(val.get("status")));
+				view_content.add(column);
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			empty = {"text":"No watchers found for the given work package","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+			return empty;
+		}
+		else
+		{
+			success_card = {"text":"Watcher details","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/11384/11384180.png","theme":"prompt"},"slides":{{"type":"table","title":response_subject,"data":{"headers":{"Id","First Name","Last Name","Created At","Updated At","Login","Email","Status"},"rows":view_content}}}};
+			return success_card;
+		}
+	}
+}
+if(target.get("name").startsWith("Select   #"))
+{
+	view_content = list();
+	add_name = target.get("name").subString(0,6);
+	add_id = target.get("name").subString(10);
+	name_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + add_id
+		type :GET
+		connection:"openproject"
+	];
+	response_name = name_response.getFileContent();
+	response_subject = response_name.get("subject");
+	users_response = invokeurl
+	[
+		url :instance_url + "api/v3/users?pageSize=49"
+		type :GET
+		connection:"openproject"
+	];
+	content = users_response.getFileContent().get("_embedded").get("elements");
+	ad_map = Map();
+	ad_map.put(true,"Yes");
+	ad_map.put(false,"No");
+	for each  val in content
+	{
+		column = Map();
+		column.put("Id",val.get("id"));
+		column.put("Name",val.get("name"));
+		column.put("Email",val.get("email"));
+		column.put("Admin",ad_map.get(val.get("admin")));
+		column.put("Watchers","[Add  #" + val.get("id") + " #" + add_id + "](invoke.function|authorize)");
+		view_content.add(column);
+	}
+	if(view_content.length() == 0)
+	{
+		empty = {"text":"No watchers found","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+		return empty;
+	}
+	else
+	{
+		package_list = {"text":"Add watchers to work package","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/11384/11384180.png","theme":"prompt"},"slides":{{"type":"table","title":response_subject,"data":{"headers":{"Id","Name","Email","Admin","Watchers"},"rows":view_content}}}};
+		return package_list;
+	}
+}
+if(target.get("name").startsWith("Add  #"))
+{
+	name_str = target.get("name");
+	ids_part = name_str.subString(5);
+	clean = ids_part.replaceAll("#","");
+	spaceIndex = clean.indexOf(" ");
+	if(spaceIndex > -1)
+	{
+		id1 = clean.subString(0,spaceIndex);
+		id2 = clean.subString(spaceIndex + 1);
+	}
+	else
+	{
+		id1 = clean;
+		id2 = "";
+	}
+	pack_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + id2
+		type :GET
+		connection:"openproject"
+	];
+	pack_content = pack_response.getFileContent();
+	pack_id = pack_content.get("id");
+	pack_subject = pack_content.get("subject");
+	url_content = {"user":{"href":"/api/v3/users/" + id1}};
+	add_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + id2 + "/watchers"
+		type :POST
+		parameters:url_content.toString()
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	response_content = add_response.getFileContent();
+	if(response_content.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(response_content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = response_content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while adding watcher to work package" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":response_content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(response_content.get("errorIdentifier")) + "\n(Error Identifier: " + response_content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(response_content.get("_type").equals("User"))
+	{
+		view_content = list();
+		val = add_response.getFileContent();
+		column = Map();
+		column.put("Package Id",pack_id);
+		column.put("Package Name",pack_subject);
+		column.put("User Id",val.get("id"));
+		if(val.get("firstName").isNull() || val.get("firstName").equals(""))
+		{
+			column.put("First Name","-");
+		}
+		else
+		{
+			column.put("First Name",val.get("firstName"));
+		}
+		if(val.get("lastName").isNull() || val.get("lastName").equals(""))
+		{
+			column.put("Last Name","-");
+		}
+		else
+		{
+			column.put("Last Name",val.get("lastName"));
+		}
+		createdate = val.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		column.put("Created At",createdate1);
+		update = val.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		column.put("Updated At",update1);
+		if(val.get("login").isNull() || val.get("login").equals(""))
+		{
+			column.put("Login","-");
+		}
+		else
+		{
+			column.put("Login",val.get("login"));
+		}
+		if(val.get("email").isNull() || val.get("email").equals(""))
+		{
+			column.put("Email","-");
+		}
+		else
+		{
+			column.put("Email",val.get("email"));
+		}
+		ig = Map();
+		ig.put("active","Active");
+		ig.put("invited","Invited");
+		column.put("Status",ig.get(val.get("status")));
+		view_content.add(column);
+		success_card = {"text":"Watcher has been added to the work package successfully\n(Tap the card to view details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/2550/2550322.png","theme":"prompt"},"slides":{{"type":"table","title":"Details","data":{"headers":{"Package Id","Package Name","User Id","First Name","Last Name","Created At","Updated At","Login","Email","Status"},"rows":view_content}}}};
+		return success_card;
+	}
+}
+if(target.get("name").startsWith("Select  #"))
+{
+	view_content = list();
+	add_name = target.get("name").subString(0,6);
+	add_id = target.get("name").subString(9);
+	name_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + add_id
+		type :GET
+		connection:"openproject"
+	];
+	response_name = name_response.getFileContent();
+	response_subject = response_name.get("subject");
+	watcher_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + add_id + "/watchers?pageSize=49"
+		type :GET
+		connection:"openproject"
+	];
+	content = watcher_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while fetching watchers for a work package" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(content.get("_type").equals("Collection"))
+	{
+		details = content.get("_embedded").get("elements");
+		for each  val in details
+		{
+			if(val.get("_type").equals("User"))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				if(val.get("firstName").isNull() || val.get("firstName").equals(""))
+				{
+					column.put("First Name","-");
+				}
+				else
+				{
+					column.put("First Name",val.get("firstName"));
+				}
+				if(val.get("lastName").isNull() || val.get("lastName").equals(""))
+				{
+					column.put("Last Name","-");
+				}
+				else
+				{
+					column.put("Last Name",val.get("lastName"));
+				}
+				createdate = val.get("createdAt").subString(0,10);
+				createdate1 = toDate(createdate,"yyyy-MM-dd");
+				column.put("Created At",createdate1);
+				update = val.get("updatedAt").subString(0,10);
+				update1 = toDate(update,"yyyy-MM-dd");
+				column.put("Updated At",update1);
+				if(val.get("login").isNull() || val.get("login").equals(""))
+				{
+					column.put("Login","-");
+				}
+				else
+				{
+					column.put("Login",val.get("login"));
+				}
+				if(val.get("email").isNull() || val.get("email").equals(""))
+				{
+					column.put("Email","-");
+				}
+				else
+				{
+					column.put("Email",val.get("email"));
+				}
+				ig = Map();
+				ig.put("active","Active");
+				ig.put("invited","Invited");
+				column.put("Status",ig.get(val.get("status")));
+				column.put("Watchers","[Remove  #" + val.get("id") + " #" + add_id + "](invoke.function|authorize)");
+				view_content.add(column);
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			empty = {"text":"No watchers found for the given work package","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+			return empty;
+		}
+		else
+		{
+			success_card = {"text":"Watcher details","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/11384/11384180.png","theme":"prompt"},"slides":{{"type":"table","title":response_subject,"data":{"headers":{"Id","First Name","Last Name","Created At","Updated At","Login","Email","Status","Watchers"},"rows":view_content}}}};
+			return success_card;
+		}
+	}
+}
+if(target.get("name").startsWith("Remove  #"))
+{
+	name_str = target.get("name");
+	ids_part = name_str.subString(8);
+	clean = ids_part.replaceAll("#","");
+	spaceIndex = clean.indexOf(" ");
+	if(spaceIndex > -1)
+	{
+		id1 = clean.subString(0,spaceIndex);
+		id2 = clean.subString(spaceIndex + 1);
+	}
+	else
+	{
+		id1 = clean;
+		id2 = "";
+	}
+	pack_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + id2
+		type :GET
+		connection:"openproject"
+	];
+	pack_content = pack_response.getFileContent();
+	pack_id = pack_content.get("id");
+	pack_subject = pack_content.get("subject");
+	del_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + id2 + "/watchers/" + id1
+		type :DELETE
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	flag = false;
+	content = del_response.getFileContent();
+	if(!content.isNull() && del_response.getFileContent().get("_type").equals("Error"))
+	{
+		flag = true;
+		check = true;
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while removing the watcher" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else
+	{
+		delete_card = {"text":"Watcher #" + id1 + " was successfully removed from the Work Package #" + id2,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313152.png","theme":"prompt"}};
+		return delete_card;
+	}
+}
+if(target.get("name").startsWith("Read #"))
+{
+	read_name = target.get("name").subString(0,4);
+	read_id = target.get("name").subString(6);
+	read_response = invokeurl
+	[
+		url :instance_url + "api/v3/news/" + read_id
+		type :GET
+		connection:"openproject"
+	];
+	content = read_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while viewing the news details" + "\n (Tap the card for more details)","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	if(content.get("_type").equals("News"))
+	{
+		view_content = List();
+		column = Map();
+		column.put("News Id",content.get("id"));
+		if(content.get("title").isNull() || content.get("title").equals(""))
+		{
+			column.put("News Title","-");
+			news_title = "-";
+		}
+		else
+		{
+			column.put("News Title",content.get("title"));
+			news_title = content.get("title");
+		}
+		if(content.get("summary").isNull() || content.get("summary").equals(""))
+		{
+			summary = "-";
+		}
+		else
+		{
+			summary = content.get("summary");
+		}
+		if(content.get("description").get("raw").isNull() || content.get("description").get("raw").equals(""))
+		{
+			description = "-";
+		}
+		else
+		{
+			description = content.get("description").get("raw");
+		}
+		createdate = content.get("createdAt").subString(0,10);
+		createdate1 = toDate(createdate,"yyyy-MM-dd");
+		update = content.get("updatedAt").subString(0,10);
+		update1 = toDate(update,"yyyy-MM-dd");
+		column.put("Created At",createdate1);
+		column.put("Updated At",update1);
+		check = content.get("_links").get("project").get("href");
+		pos = check.lastIndexOf("/");
+		project_id = check.subString(pos + 1);
+		column.put("Project Id",project_id);
+		column.put("Project Name",content.get("_links").get("project").get("title"));
+		check1 = content.get("_links").get("author").get("href");
+		pos1 = check1.lastIndexOf("/");
+		author_id = check1.subString(pos1 + 1);
+		column.put("Author Id",author_id);
+		column.put("Author Name",content.get("_links").get("author").get("title"));
+		view_content.add(column);
+		success_card = {"text":"News Details","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/7063/7063304.png","theme":"prompt"},"slides":{{"type":"label","title":"","data":{{"Title":news_title},{"Summary":summary},{"Description":description}}},{"type":"table","title":"","data":{"headers":{"News Id","News Title","Created At","Updated At","Project Id","Project Name","Author Id","Author Name"},"rows":view_content}}}};
+		return success_card;
+	}
+}
+if(target.get("name").startsWith("Modify #"))
+{
+	modify_name = target.get("name").subString(0,6);
+	modify_id = target.get("name").subString(8);
+	update_response = invokeurl
+	[
+		url :instance_url + "api/v3/news/" + modify_id
+		type :GET
+		connection:"openproject"
+	];
+	contents = update_response.getFileContent();
+	if(contents.get("title").isNull() || contents.get("title").equals(""))
+	{
+		news_title = "";
+	}
+	else
+	{
+		news_title = contents.get("title");
+	}
+	if(contents.get("summary").isNull() || contents.get("summary").equals(""))
+	{
+		summary = "";
+	}
+	else
+	{
+		summary = contents.get("summary");
+	}
+	if(contents.get("description").get("raw").isNull() || contents.get("description").get("raw").equals(""))
+	{
+		description = "";
+	}
+	else
+	{
+		description = contents.get("description").get("raw");
+	}
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	project_ids = List();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("id"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+		project_ids.add(val.get("id"));
+	}
+	project = projectid_map.get(contents.get("_links").get("project").get("title"));
+	news_update = {"type":"form","title":"Update News","name":modify_id,"hint":"To update news","button_label":"Submit","inputs":{{"label":"Project","name":"project","value":project,"placeholder":"Update the project from the list","multiple":false,"mandatory":true,"type":"select","options":{}},{"label":"Title","name":"title","value":news_title,"placeholder":"Update the title for the news","min_length":"0","max_length":"60","mandatory":true,"type":"text"},{"label":"Summary","value":summary,"name":"summary","placeholder":"Update the summary for the news","min_length":"0","max_length":"255","mandatory":false,"type":"textarea"},{"label":"Description","name":"description","value":description,"placeholder":"Update the description for the news","min_length":"0","max_length":"10000","mandatory":false,"type":"textarea"}},"action":{"type":"invoke.function","name":"updatenews"}};
+	cont = news_update.get("inputs").get(0).get("options");
+	for each  val in projectid_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		optionMap.put("value",projectid_map.get(val));
+		cont.add(optionMap);
+	}
+	return news_update;
+}
+if(target.get("name").startsWith("Delete     #"))
+{
+	news_name = target.get("name").subString(0,11);
+	news_id = target.get("name").subString(12);
+	confirm_delete = {"text":"Are you sure you want to remove this news #" + news_id + "?","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/7063/7063304.png","theme":"prompt"},"buttons":{{"label":"Cancel","hint":"To cancel the news removal","type":"+","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"cancel_news-" + news_id},{"label":"Delete","hint":"To remove the news","type":"-","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"delete_news-" + news_id}}};
+	return confirm_delete;
+}
+if(target.get("name").startsWith("Check   #"))
+{
+	view_content = list();
+	check_name = target.get("name").subString(0,5);
+	check_id = target.get("name").subString(9);
+	check_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + check_id + "/reminders"
+		type :GET
+		connection:"openproject"
+	];
+	response_name = check_response.getFileContent();
+	if(response_name.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(response_name.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = response_name.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while listing the reminders" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":response_name.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(response_name.get("errorIdentifier")) + "\n(Error Identifier: " + response_name.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(response_name.get("_type").equals("Collection"))
+	{
+		content = response_name.get("_embedded").get("elements");
+		for each  val in content
+		{
+			if(val.get("_type").equals("Reminder"))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				column.put("Note",val.get("note"));
+				date1 = val.get("remindAt").subString(0,10);
+				time1 = val.get("remindAt").subString(11,19);
+				datetime = toDate(date1,"yyyy-MM-dd") + " (" + time1 + ") ";
+				column.put("Remind At",datetime);
+				column.put("Creator",val.get("_links").get("creator").get("title"));
+				column.put("Work Package",val.get("_links").get("remindable").get("title"));
+				title_response = val.get("_links").get("remindable").get("title");
+				view_content.add(column);
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			empty = {"text":"No reminders found for the given work package","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+			return empty;
+		}
+		else
+		{
+			success_card = {"text":"Reminder details","navigation":true,"bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/256/10582/10582084.png","theme":"prompt"},"slides":{{"type":"table","title":title_response,"data":{"headers":{"Id","Note","Remind At","Creator","Work Package"},"rows":view_content}}}};
+			return success_card;
+		}
+	}
+}
+if(target.get("name").startsWith("Lock   #"))
+{
+	lock_name = target.get("name").subString(0,4);
+	lock_id = target.get("name").subString(8);
+	lock_response = invokeurl
+	[
+		url :instance_url + "api/v3/users/" + lock_id + "/lock"
+		type :POST
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = lock_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while locking the user" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(content.get("_type").equals("User"))
+	{
+		if(content.get("_links").contains("unlock"))
+		{
+			lock_card = {"text":"User #" + lock_id + " has been locked","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/256/891/891382.png","theme":"prompt"}};
+			return lock_card;
+		}
+	}
+}
+if(target.get("name").startsWith("Unlock   #"))
+{
+	unlock_name = target.get("name").subString(0,6);
+	unlock_id = target.get("name").subString(10);
+	lock_response = invokeurl
+	[
+		url :instance_url + "api/v3/users/" + unlock_id + "/lock"
+		type :DELETE
+		headers:{"content-type":"application/json"}
+		connection:"openproject"
+	];
+	content = lock_response.getFileContent();
+	if(content.get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while unlocking the user" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else if(content.get("_type").equals("User"))
+	{
+		if(content.get("_links").contains("lock"))
+		{
+			unlock_card = {"text":"User #" + unlock_id + " has been unlocked","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/4429/4429436.png","theme":"prompt"}};
+			return unlock_card;
+		}
+	}
+}
+if(arguments.get("key").startsWith("delete_news-"))
+{
+	check = false;
+	delete_key_id = arguments.get("key").subString(12);
+	delete_response = invokeurl
+	[
+		url :instance_url + "api/v3/news/" + delete_key_id
+		type :DELETE
+		connection:"openproject"
+	];
+	content = delete_response.getFileContent();
+	if(!content.isNull() && delete_response.getFileContent().get("_type").equals("Error"))
+	{
+		check = true;
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while deleting the news" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else
+	{
+		delete_card = {"text":"News #" + delete_key_id + " has been deleted","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313152.png","theme":"prompt"}};
+		return delete_card;
+	}
+}
+if(arguments.get("key").startsWith("cancel_news-"))
+{
+	cancel_key_id = arguments.get("key").subString(12);
+	check_response = invokeurl
+	[
+		url :instance_url + "api/v3/news/" + cancel_key_id
+		type :GET
+		connection:"openproject"
+	];
+	content = check_response.getFileContent();
+	if(check_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while canceling the news deletion" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	if(check_response.getFileContent().get("_type").equals("News"))
+	{
+		cancel_card = {"text":"News (#" + cancel_key_id + ") deletion has been canceled","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313152.png","theme":"prompt"}};
+		return cancel_card;
+	}
+}
+if(arguments.get("key").startsWith("delete_user-"))
+{
+	check = false;
+	delete_key_id = arguments.get("key").subString(12);
+	delete_response = invokeurl
+	[
+		url :instance_url + "api/v3/users/" + delete_key_id
+		type :DELETE
+		connection:"openproject"
+	];
+	flag = false;
+	content = delete_response.getFileContent();
+	if(delete_response.getFileContent().contains("_Error") && delete_response.getFileContent().get("_type").equals("Error"))
+	{
+		flag = true;
+		check = true;
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while removing the user" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	if(!flag)
+	{
+		delete_card = {"text":"User #" + delete_key_id + " has been removed","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313152.png","theme":"prompt"}};
+		return delete_card;
+	}
+}
+if(arguments.get("key").startsWith("cancel_user-"))
+{
+	cancel_key_id = arguments.get("key").subString(12);
+	check_response = invokeurl
+	[
+		url :instance_url + "api/v3/users/" + cancel_key_id
+		type :GET
+		connection:"openproject"
+	];
+	content = check_response.getFileContent();
+	if(check_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while canceling the user removal" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	if(check_response.getFileContent().get("_type").equals("User"))
+	{
+		cancel_card = {"text":"User (#" + cancel_key_id + ") removal has been canceled","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313152.png","theme":"prompt"}};
+		return cancel_card;
+	}
+}
+if(arguments.get("key").startsWith("delete_project-"))
+{
+	check = false;
+	delete_key_id = arguments.get("key").subString(15);
+	delete_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + delete_key_id
+		type :DELETE
+		connection:"openproject"
+	];
+	content = delete_response.getFileContent();
+	if(!content.isNull() && delete_response.getFileContent().get("_type").equals("Error"))
+	{
+		check = true;
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while deleting the project" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else
+	{
+		delete_card = {"text":"Project #" + delete_key_id + " has been deleted","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313152.png","theme":"prompt"}};
+		return delete_card;
+	}
+}
+if(arguments.get("key").startsWith("cancel_project-"))
+{
+	cancel_key_id = arguments.get("key").subString(15);
+	check_response = invokeurl
+	[
+		url :instance_url + "api/v3/projects/" + cancel_key_id
+		type :GET
+		connection:"openproject"
+	];
+	content = check_response.getFileContent();
+	if(check_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while canceling the project deletion" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	if(check_response.getFileContent().get("_type").equals("Project"))
+	{
+		cancel_card = {"text":"Project (#" + cancel_key_id + ") deletion has been canceled","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313152.png","theme":"prompt"}};
+		return cancel_card;
+	}
+}
+if(arguments.get("key").startsWith("delete_workpackage-"))
+{
+	check = false;
+	delete_key_id = arguments.get("key").subString(19);
+	delete_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + delete_key_id
+		type :DELETE
+		connection:"openproject"
+	];
+	content = delete_response.getFileContent();
+	if(!content.isNull() && delete_response.getFileContent().get("_type").equals("Error"))
+	{
+		check = true;
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while deleting the work package" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	else
+	{
+		delete_card = {"text":"Work package #" + delete_key_id + " has been deleted","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313152.png","theme":"prompt"}};
+		return delete_card;
+	}
+}
+if(arguments.get("key").startsWith("cancel_workpackage-"))
+{
+	cancel_key_id = arguments.get("key").subString(19);
+	check_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/" + cancel_key_id
+		type :GET
+		connection:"openproject"
+	];
+	content = check_response.getFileContent();
+	if(check_response.getFileContent().get("_type").equals("Error"))
+	{
+		error_content = {"urn:openproject-org:api:v3:errors:InvalidQuery":"The query contained a value that did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRenderContext":"The client specified a rendering context that does not exist (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidRequestBody":"The format of the request body did not match the server's expectation (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidSignal":"The client specified a select not available on the resource, e.g., because the property/link does not exist on it (HTTP 400).","urn:openproject-org:api:v3:errors:InvalidUserStatusTransition":"The client used an invalid transition in the attempt to change the status of a user account (HTTP 400).","urn:openproject-org:api:v3:errors:Unauthenticated":"The client has to authenticate to access the requested resource (HTTP 401).","urn:openproject-org:api:v3:errors:MissingPermission":"The client does not have the needed permissions to perform the requested action (HTTP 403).","urn:openproject-org:api:v3:errors:NotFound":"Default for HTTP 404 when no further information is available.","urn:openproject-org:api:v3:errors:UpdateConflict":"The resource changed between GET-ing it and performing an update on it (HTTP 409).","urn:openproject-org:api:v3:errors:TypeNotSupported":"The request contained data in an unsupported media type (Content-Type) (HTTP 415).","urn:openproject-org:api:v3:errors:PropertyConstraintViolation":"The client tried to set a property to an invalid value (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyIsReadOnly":"The client tried to set or change a property that is not writable (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyFormatError":"A property value was provided in a format that the server does not understand or accept (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyMissingError":"The request is syntactically correct, but is missing a property to perform the requested action (HTTP 422).","urn:openproject-org:api:v3:errors:PropertyValueNotAvailableAnymore":"An unchanged property needs to be changed because other changes to the resource make it unavailable (HTTP 422).","urn:openproject-org:api:v3:errors:ResourceTypeMismatch":"A link to a resource of a specific type was expected, but a link to another type of resource was provided (HTTP 422).","urn:openproject-org:api:v3:errors:InternalServerError":"Default for HTTP 500 when no further information is available.","urn:openproject-org:api:v3:errors:MultipleErrors":"Multiple errors occurred. See the embedded errors array for more details."};
+		add_data = "";
+		add_details = "";
+		if(content.containsIgnoreCase("_embedded"))
+		{
+			cont = 1;
+			add_data = "\n";
+			add_details = "\n";
+			details = content.get("_embedded").get("errors");
+			for each  val in details
+			{
+				add_data = add_data + "\n" + cont + ". " + val.get("message") + " (Attribute: " + val.get("_embedded").get("details").get("attribute") + ")";
+				add_details = add_details + "\n" + cont + ". " + error_content.get(val.get("errorIdentifier")) + "\n(Error Identifier: " + val.get("errorIdentifier") + ")";
+				cont = cont + 1;
+			}
+		}
+		error_card = {"text":"Error occurred while canceling the work package deletion" + "\n (Tap the card for more details)","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"title":"","thumbnail":"https://cdn-icons-png.flaticon.com/512/11560/11560437.png","theme":"prompt"},"slides":{{"type":"text","title":"","data":content.get("message") + add_data + "\n\nTechnical Details:\n" + error_content.get(content.get("errorIdentifier")) + "\n(Error Identifier: " + content.get("errorIdentifier") + ")" + add_details}}};
+		return error_card;
+	}
+	if(check_response.getFileContent().get("_type").equals("WorkPackage"))
+	{
+		cancel_card = {"text":"Work package (#" + cancel_key_id + ") deletion has been canceled","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313152.png","theme":"prompt"}};
+		return cancel_card;
+	}
+}
+return response;

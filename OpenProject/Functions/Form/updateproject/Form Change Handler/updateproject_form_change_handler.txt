@@ -1,0 +1,190 @@
+
+targetName = target.get("name");
+info targetName;
+inputValues = form.get("values");
+info inputValues;
+actions = list();
+///////////////////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+//////////////////////////////////////////////////////////////////////////////
+if(targetName.containsIgnoreCase("filter"))
+{
+	if(inputValues.get("filter").equalsIgnoreCase("{}"))
+	{
+		actions.add({"type":"remove","name":"name"});
+		actions.add({"type":"remove","name":"created_at"});
+		actions.add({"type":"remove","name":"updated_at"});
+		actions.add({"type":"remove","name":"active (true)"});
+		actions.add({"type":"remove","name":"active (false)"});
+		actions.add({"type":"remove","name":"public (true)"});
+		actions.add({"type":"remove","name":"public (false)"});
+		actions.add({"type":"remove","name":"status"});
+		actions.add({"type":"remove","name":"parent"});
+	}
+	else
+	{
+		options = inputValues.get("filter");
+		if(options.get("label").equalsIgnoreCase("All"))
+		{
+			actions.add({"type":"remove","name":"name"});
+			actions.add({"type":"remove","name":"created_at"});
+			actions.add({"type":"remove","name":"updated_at"});
+			actions.add({"type":"remove","name":"active (true)"});
+			actions.add({"type":"remove","name":"active (false)"});
+			actions.add({"type":"remove","name":"public (true)"});
+			actions.add({"type":"remove","name":"public (false)"});
+			actions.add({"type":"remove","name":"status"});
+			actions.add({"type":"remove","name":"parent"});
+		}
+		if(options.get("label").equalsIgnoreCase("Name"))
+		{
+			name_response = invokeurl
+			[
+				url :instance_url + "api/v3/projects?pageSize=100"
+				type :GET
+				connection:"openproject"
+			];
+			name_map = Map();
+			name_list = List();
+			name_content = name_response.getFileContent().get("_embedded").get("elements");
+			for each  val in name_content
+			{
+				name_map.put(val.get("_links").get("self").get("title"),val.get("_links").get("self").get("href"));
+				name_list.add(val.get("_links").get("self").get("title"));
+			}
+			content_list = List();
+			for each  val in name_list
+			{
+				optionMap = Map();
+				optionMap.put("label",val);
+				newval = replaceAll(val," ","");
+				optionMap.put("value",newval.getAlphaNumeric());
+				content_list.add(optionMap);
+			}
+			name_content = {"label":"Name","name":"name","placeholder":"Choose the project from the list","multiple":false,"mandatory":true,"type":"select","options":content_list};
+			actions.add({"type":"add_after","name":"filter","input":name_content});
+		}
+		else
+		{
+			actions.add({"type":"remove","name":"name"});
+		}
+		if(options.get("label").equalsIgnoreCase("Created At"))
+		{
+			createdat = {"label":"Created At","name":"created_at","placeholder":"Enter the creation date for the project","mandatory":true,"type":"date"};
+			actions.add({"type":"add_after","name":"filter","input":createdat});
+		}
+		else
+		{
+			actions.add({"type":"remove","name":"created_at"});
+		}
+		if(options.get("label").equalsIgnoreCase("Updated At"))
+		{
+			updatedat = {"label":"Updated At","name":"updated_at","placeholder":"Enter the updation date for the project","mandatory":true,"type":"date"};
+			actions.add({"type":"add_after","name":"filter","input":updatedat});
+		}
+		else
+		{
+			actions.add({"type":"remove","name":"updated_at"});
+		}
+		if(options.get("label").equalsIgnoreCase("Active Project True"))
+		{
+			actions.add({"type":"remove","name":"name"});
+			actions.add({"type":"remove","name":"created_at"});
+			actions.add({"type":"remove","name":"updated_at"});
+			actions.add({"type":"remove","name":"active (false)"});
+			actions.add({"type":"remove","name":"public (true)"});
+			actions.add({"type":"remove","name":"public (false)"});
+			actions.add({"type":"remove","name":"status"});
+			actions.add({"type":"remove","name":"parent"});
+		}
+		if(options.get("label").equalsIgnoreCase("Active Project False"))
+		{
+			actions.add({"type":"remove","name":"name"});
+			actions.add({"type":"remove","name":"created_at"});
+			actions.add({"type":"remove","name":"updated_at"});
+			actions.add({"type":"remove","name":"active (true)"});
+			actions.add({"type":"remove","name":"public (true)"});
+			actions.add({"type":"remove","name":"public (false)"});
+			actions.add({"type":"remove","name":"status"});
+			actions.add({"type":"remove","name":"parent"});
+		}
+		if(options.get("label").equalsIgnoreCase("Public Project True"))
+		{
+			actions.add({"type":"remove","name":"name"});
+			actions.add({"type":"remove","name":"created_at"});
+			actions.add({"type":"remove","name":"updated_at"});
+			actions.add({"type":"remove","name":"active (true)"});
+			actions.add({"type":"remove","name":"active (false)"});
+			actions.add({"type":"remove","name":"public (false)"});
+			actions.add({"type":"remove","name":"status"});
+			actions.add({"type":"remove","name":"parent"});
+		}
+		if(options.get("label").equalsIgnoreCase("Public Project False"))
+		{
+			actions.add({"type":"remove","name":"name"});
+			actions.add({"type":"remove","name":"created_at"});
+			actions.add({"type":"remove","name":"updated_at"});
+			actions.add({"type":"remove","name":"active (true)"});
+			actions.add({"type":"remove","name":"active (false)"});
+			actions.add({"type":"remove","name":"public (true)"});
+			actions.add({"type":"remove","name":"status"});
+			actions.add({"type":"remove","name":"parent"});
+		}
+		if(options.get("label").equalsIgnoreCase("Status"))
+		{
+			status_response = invokeurl
+			[
+				url :instance_url + "api/v3/projects/form"
+				type :POST
+				headers:{"content-type":"application/json"}
+				connection:"openproject"
+			];
+			status_map = Map();
+			status_list = List();
+			status_content = status_response.getFileContent().get("_embedded").get("schema").get("status").get("_links").get("allowedValues");
+			for each  value in status_content
+			{
+				content = Map();
+				content.put("label",value.get("title"));
+				new_status = replaceAll(value.get("title")," ","");
+				content.put("value",new_status);
+				status_map.put(value.get("title"),value.get("href"));
+				status_list.add(content);
+			}
+			status_content = {"label":"Status","name":"status","placeholder":"Choose the status from the list","multiple":false,"mandatory":true,"type":"select","options":status_list};
+			actions.add({"type":"add_after","name":"filter","input":status_content});
+		}
+		else
+		{
+			actions.add({"type":"remove","name":"status"});
+		}
+		if(options.get("label").equalsIgnoreCase("Parent"))
+		{
+			available_parent = invokeurl
+			[
+				url :instance_url + "api/v3/projects/available_parent_projects?pageSize=100"
+				type :GET
+				connection:"openproject"
+			];
+			parent = available_parent.getFileContent().get("_embedded").get("elements");
+			parent_list = List();
+			parent_map = Map();
+			for each  value in parent
+			{
+				content = Map();
+				content.put("label",value.get("_links").get("self").get("title"));
+				new_parent = replaceAll(value.get("_links").get("self").get("title")," ","");
+				content.put("value",new_parent.getAlphaNumeric());
+				parent_map.put(value.get("_links").get("self").get("title"),value.get("_links").get("self").get("href"));
+				parent_list.add(content);
+			}
+			parent_content = {"label":"Parent","name":"parent","placeholder":"Choose the parent from the list","multiple":false,"mandatory":true,"type":"select","options":parent_list};
+			actions.add({"type":"add_after","name":"filter","input":parent_content});
+		}
+		else
+		{
+			actions.add({"type":"remove","name":"parent"});
+		}
+	}
+}
+return {"type":"form_modification","actions":actions};

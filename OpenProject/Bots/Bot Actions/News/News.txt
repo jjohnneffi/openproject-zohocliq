@@ -1,0 +1,155 @@
+
+response = Map();
+///////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+///////////////////////////////////////////////////////////
+if(sub_action.equals("Create"))
+{
+	project_response = invokeurl
+	[
+		url :instance_url + "api/v3/work_packages/available_projects?pageSize=100"
+		type :GET
+		connection:"openproject"
+	];
+	projectid_map = Map();
+	projectid_list = List();
+	project_ids = List();
+	projectid_content = project_response.getFileContent().get("_embedded").get("elements");
+	for each  val in projectid_content
+	{
+		projectid_map.put(val.get("_links").get("self").get("title"),val.get("id"));
+		projectid_list.add(val.get("_links").get("self").get("title"));
+		project_ids.add(val.get("id"));
+	}
+	news_form = {"type":"form","title":"Create News","name":"createnews","hint":"To create news","button_label":"Submit","inputs":{{"label":"Project","name":"project","placeholder":"Choose the project from the list","multiple":false,"mandatory":true,"type":"select","options":{}},{"label":"Title","name":"title","placeholder":"Enter the title for the news","min_length":"0","max_length":"60","mandatory":true,"type":"text"},{"label":"Summary","name":"summary","placeholder":"Enter the summary for the news","min_length":"0","max_length":"255","mandatory":true,"type":"textarea"},{"label":"Description","name":"description","placeholder":"Enter the description for the news","min_length":"0","max_length":"10000","mandatory":true,"type":"textarea"}},"action":{"type":"invoke.function","name":"createform"}};
+	content = news_form.get("inputs").get(0).get("options");
+	for each  val in projectid_list
+	{
+		optionMap = Map();
+		optionMap.put("label",val);
+		optionMap.put("value",projectid_map.get(val));
+		content.add(optionMap);
+	}
+	return news_form;
+}
+if(sub_action.equals("View"))
+{
+	view_content = list();
+	all_response = invokeurl
+	[
+		url :instance_url + "api/v3/news?pageSize=49"
+		type :GET
+		connection:"openproject"
+	];
+	content = all_response.getFileContent().get("_embedded").get("elements");
+	for each  val in content
+	{
+		column = Map();
+		column.put("News Id",val.get("id"));
+		if(val.get("title").isNull() || val.get("title").equals(""))
+		{
+			column.put("News Title","-");
+		}
+		else
+		{
+			column.put("News Title",val.get("title"));
+		}
+		createdate = val.get("createdAt").subString(0,10);
+		update = val.get("updatedAt").subString(0,10);
+		column.put("Created At",toDate(createdate,"yyyy-MM-dd"));
+		column.put("Updated At",toDate(update,"yyyy-MM-dd"));
+		column.put("News","[Read #" + val.get("id") + "](invoke.function|authorize)");
+		view_content.add(column);
+	}
+	if(view_content.length() == 0)
+	{
+		empty = {"text":"No news found","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+		return empty;
+	}
+	else
+	{
+		package_list = {"text":"Click to view news details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/7063/7063304.png","theme":"prompt"},"slides":{{"type":"table","title":"News - List","data":{"headers":{"News Id","News Title","Created At","Updated At","News"},"rows":view_content}}}};
+		return package_list;
+	}
+}
+if(sub_action.equals("Modify"))
+{
+	view_content = list();
+	all_response = invokeurl
+	[
+		url :instance_url + "api/v3/news?pageSize=49"
+		type :GET
+		connection:"openproject"
+	];
+	content = all_response.getFileContent().get("_embedded").get("elements");
+	for each  val in content
+	{
+		column = Map();
+		column.put("News Id",val.get("id"));
+		if(val.get("title").isNull() || val.get("title").equals(""))
+		{
+			column.put("News Title","-");
+		}
+		else
+		{
+			column.put("News Title",val.get("title"));
+		}
+		createdate = val.get("createdAt").subString(0,10);
+		update = val.get("updatedAt").subString(0,10);
+		column.put("Created At",toDate(createdate,"yyyy-MM-dd"));
+		column.put("Updated At",toDate(update,"yyyy-MM-dd"));
+		column.put("News","[Modify #" + val.get("id") + "](invoke.function|authorize)");
+		view_content.add(column);
+	}
+	if(view_content.length() == 0)
+	{
+		empty = {"text":"No news found","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+		return empty;
+	}
+	else
+	{
+		package_list = {"text":"Click to modify news details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/7063/7063304.png","theme":"prompt"},"slides":{{"type":"table","title":"News - Modify","data":{"headers":{"News Id","News Title","Created At","Updated At","News"},"rows":view_content}}}};
+		return package_list;
+	}
+}
+else if(sub_action.equals("Delete"))
+{
+	view_content = list();
+	all_response = invokeurl
+	[
+		url :instance_url + "api/v3/news?pageSize=49"
+		type :GET
+		connection:"openproject"
+	];
+	content = all_response.getFileContent().get("_embedded").get("elements");
+	for each  val in content
+	{
+		column = Map();
+		column.put("News Id",val.get("id"));
+		if(val.get("title").isNull() || val.get("title").equals(""))
+		{
+			column.put("News Title","-");
+		}
+		else
+		{
+			column.put("News Title",val.get("title"));
+		}
+		createdate = val.get("createdAt").subString(0,10);
+		update = val.get("updatedAt").subString(0,10);
+		column.put("Created At",toDate(createdate,"yyyy-MM-dd"));
+		column.put("Updated At",toDate(update,"yyyy-MM-dd"));
+		column.put("News","[Delete     #" + val.get("id") + "](invoke.function|authorize)");
+		view_content.add(column);
+	}
+	if(view_content.length() == 0)
+	{
+		empty = {"text":"No news found","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+		return empty;
+	}
+	else
+	{
+		package_list = {"text":"Click to delete news item","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/7063/7063304.png","theme":"prompt"},"slides":{{"type":"table","title":"News - Delete","data":{"headers":{"News Id","News Title","Created At","Updated At","News"},"rows":view_content}}}};
+		return package_list;
+	}
+}
+return response;

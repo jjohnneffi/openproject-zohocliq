@@ -1,0 +1,56 @@
+
+//Configure a scheduler that reminds you of tasks and posts the message in a chat, channel or a bot!
+////////////////////////////////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+////////////////////////////////////////////////////////////////////////////////////////////
+view_content = List();
+notify_response = invokeurl
+[
+	url :instance_url + "api/v3/notifications"
+	type :GET
+	connection:"openproject"
+];
+notify_content = notify_response.getFileContent().get("_embedded").get("elements");
+for each  val in notify_content
+{
+	column = Map();
+	column.put("Notification Id",val.get("id"));
+	column.put("Type",val.get("reason"));
+	inner_val = val.get("_embedded").get("details").get(0);
+	column.put("Note",inner_val.get("value"));
+	column.put("Created\n At",toDate(val.get("createdAt").subString(0,10),"yyyy-MM-dd"));
+	column.put("Updated At",toDate(val.get("updatedAt").subString(0,10),"yyyy-MM-dd"));
+	status = val.get("readIAN");
+	if(status.equals(true))
+	{
+		column.put("Mark as","[Unread  #" + val.get("id") + "](invoke.function|authorize)");
+	}
+	else if(status.equals(false))
+	{
+		column.put("Mark as","[Read  #" + val.get("id") + "](invoke.function|authorize)");
+	}
+	pack_href = val.get("_links").get("resource").get("href");
+	packid_pos = pack_href.lastIndexOf("/");
+	workpackage_id = pack_href.subString(packid_pos + 1);
+	workpackage_name = val.get("_links").get("resource").get("title");
+	column.put("Package Id",workpackage_id);
+	column.put("Package Subject",workpackage_name);
+	column.put("Package","[View  #" + workpackage_id + "](invoke.function|authorize)");
+	project_href = val.get("_links").get("project").get("href");
+	projectid_pos = project_href.lastIndexOf("/");
+	project_id = project_href.subString(projectid_pos + 1);
+	project_name = val.get("_links").get("project").get("title");
+	column.put("Project Id",project_id);
+	column.put("Project Name",project_name);
+	column.put("Project","[View #" + project_id + "](invoke.function|authorize)");
+	view_content.add(column);
+}
+if(view_content.length() == 0)
+{
+	notify = {"text":"No reminders found","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+}
+else
+{
+	notify = {"text":"Daily Reminders","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/124/124056.png","theme":"prompt"},"slides":{{"type":"table","title":"Notifications - List","buttons":{{"label":"Read all","hint":"To read all notifications","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"read_all"},{"label":"Unread all","hint":"To unread all notifications","action":{"type":"invoke.function","data":{"name":"authorize"}},"key":"unread_all"}},"data":{"headers":{"Notification Id","Type","Note","Created\n At","Updated At","Mark as","Package Id","Package Subject","Package","Project Id","Project Name","Project"},"rows":view_content}}}};
+}
+zoho.cliq.postToBot("openproject",notify);

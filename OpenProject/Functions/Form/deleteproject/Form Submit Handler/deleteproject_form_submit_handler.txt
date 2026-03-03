@@ -1,0 +1,570 @@
+
+response = Map();
+formValues = form.get("values");
+info formValues;
+filter = formValues.get("filter");
+////////////////////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+////////////////////////////////////////////////////////////////////////////
+view_content = list();
+check = false;
+if(filter.isEmpty())
+{
+	no_filter = {"text":"No filters applied","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+	return no_filter;
+}
+else
+{
+	if(filter.get("label").equals("All"))
+	{
+		all_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects"
+			type :GET
+			connection:"openproject"
+		];
+		all_content = all_response.getFileContent().get("_embedded").get("elements");
+		for each  val in all_content
+		{
+			column = Map();
+			column.put("Id",val.get("id"));
+			column.put("Name",val.get("name"));
+			if(!val.get("_links").get("status").get("href").isNull())
+			{
+				column.put("Status",val.get("_links").get("status").get("title"));
+			}
+			else
+			{
+				column.put("Status","-");
+			}
+			if(!val.get("_links").get("parent").get("href").isNull())
+			{
+				column.put("Parent",val.get("_links").get("parent").get("title"));
+			}
+			else
+			{
+				column.put("Parent","-");
+			}
+			column.put("Delete","[Delete #" + val.get("id") + "](invoke.function|authorize)");
+			view_content.add(column);
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to delete filtered project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Delete","data":{"headers":{"Id","Name","Status","Parent","Delete"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Name"))
+	{
+		name = formValues.get("name").get("label");
+		name_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects"
+			type :GET
+			connection:"openproject"
+		];
+		name_content = name_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in name_content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.get("name").equals(name))
+			{
+				column = Map();
+				column.put("Id",val.get("id"));
+				column.put("Name",val.get("name"));
+				if(!val.get("_links").get("status").get("href").isNull())
+				{
+					column.put("Status",val.get("_links").get("status").get("title"));
+				}
+				else
+				{
+					column.put("Status","-");
+				}
+				if(!val.get("_links").get("parent").get("href").isNull())
+				{
+					column.put("Parent",val.get("_links").get("parent").get("title"));
+				}
+				else
+				{
+					column.put("Parent","-");
+				}
+				column.put("Delete","[Delete #" + val.get("id") + "](invoke.function|authorize)");
+				view_content.add(column);
+				count = count + 1;
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to delete filtered project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Delete","data":{"headers":{"Id","Name","Status","Parent","Delete"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Created At"))
+	{
+		created = formValues.get("created_at");
+		created_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects"
+			type :GET
+			connection:"openproject"
+		];
+		created_content = created_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in created_content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("createdAt") && !val.get("createdAt").isNull())
+			{
+				mod_createdAt = val.get("createdAt").subString(0,10);
+				if(mod_createdAt.equals(created))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					if(!val.get("_links").get("status").get("href").isNull())
+					{
+						column.put("Status",val.get("_links").get("status").get("title"));
+					}
+					else
+					{
+						column.put("Status","-");
+					}
+					if(!val.get("_links").get("parent").get("href").isNull())
+					{
+						column.put("Parent",val.get("_links").get("parent").get("title"));
+					}
+					else
+					{
+						column.put("Parent","-");
+					}
+					column.put("Delete","[Delete #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to delete filtered project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Delete","data":{"headers":{"Id","Name","Status","Parent","Delete"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Updated At"))
+	{
+		updated = formValues.get("updated_at");
+		updated_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects"
+			type :GET
+			connection:"openproject"
+		];
+		updated_content = updated_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in updated_content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("updatedAt") && !val.get("updatedAt").isNull())
+			{
+				mod_updatedAt = val.get("updatedAt").subString(0,10);
+				if(mod_updatedAt.equals(updated))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					if(!val.get("_links").get("status").get("href").isNull())
+					{
+						column.put("Status",val.get("_links").get("status").get("title"));
+					}
+					else
+					{
+						column.put("Status","-");
+					}
+					if(!val.get("_links").get("parent").get("href").isNull())
+					{
+						column.put("Parent",val.get("_links").get("parent").get("title"));
+					}
+					else
+					{
+						column.put("Parent","-");
+					}
+					column.put("Delete","[Delete #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to delete filtered project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Delete","data":{"headers":{"Id","Name","Status","Parent","Delete"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Active Project (True)"))
+	{
+		active = formValues.get("active");
+		active_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects"
+			type :GET
+			connection:"openproject"
+		];
+		active_content = active_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in active_content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("active") && !val.get("active").isNull())
+			{
+				if(val.get("active").equals(true))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					if(!val.get("_links").get("status").get("href").isNull())
+					{
+						column.put("Status",val.get("_links").get("status").get("title"));
+					}
+					else
+					{
+						column.put("Status","-");
+					}
+					if(!val.get("_links").get("parent").get("href").isNull())
+					{
+						column.put("Parent",val.get("_links").get("parent").get("title"));
+					}
+					else
+					{
+						column.put("Parent","-");
+					}
+					column.put("Delete","[Delete #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to delete filtered project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Delete","data":{"headers":{"Id","Name","Status","Parent","Delete"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Active Project (False)"))
+	{
+		active = formValues.get("active");
+		active_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects"
+			type :GET
+			connection:"openproject"
+		];
+		active_content = active_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in active_content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("active") && !val.get("active").isNull())
+			{
+				if(val.get("active").equals(false))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					if(!val.get("_links").get("status").get("href").isNull())
+					{
+						column.put("Status",val.get("_links").get("status").get("title"));
+					}
+					else
+					{
+						column.put("Status","-");
+					}
+					if(!val.get("_links").get("parent").get("href").isNull())
+					{
+						column.put("Parent",val.get("_links").get("parent").get("title"));
+					}
+					else
+					{
+						column.put("Parent","-");
+					}
+					column.put("Delete","[Delete #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to delete filtered project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Delete","data":{"headers":{"Id","Name","Status","Parent","Delete"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Public Project (True)"))
+	{
+		public = formValues.get("public");
+		public_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects"
+			type :GET
+			connection:"openproject"
+		];
+		public_content = public_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in public_content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("public") && !val.get("public").isNull())
+			{
+				if(val.get("public").equals(true))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					if(!val.get("_links").get("status").get("href").isNull())
+					{
+						column.put("Status",val.get("_links").get("status").get("title"));
+					}
+					else
+					{
+						column.put("Status","-");
+					}
+					if(!val.get("_links").get("parent").get("href").isNull())
+					{
+						column.put("Parent",val.get("_links").get("parent").get("title"));
+					}
+					else
+					{
+						column.put("Parent","-");
+					}
+					column.put("Delete","[Delete #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to delete filtered project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Delete","data":{"headers":{"Id","Name","Status","Parent","Delete"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Public Project (False)"))
+	{
+		public = formValues.get("public");
+		public_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects"
+			type :GET
+			connection:"openproject"
+		];
+		public_content = public_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in public_content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(val.containsKey("public") && !val.get("public").isNull())
+			{
+				if(val.get("public").equals(false))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					if(!val.get("_links").get("status").get("href").isNull())
+					{
+						column.put("Status",val.get("_links").get("status").get("title"));
+					}
+					else
+					{
+						column.put("Status","-");
+					}
+					if(!val.get("_links").get("parent").get("href").isNull())
+					{
+						column.put("Parent",val.get("_links").get("parent").get("title"));
+					}
+					else
+					{
+						column.put("Parent","-");
+					}
+					column.put("Delete","[Delete #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to delete filtered project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Delete","data":{"headers":{"Id","Name","Status","Parent","Delete"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Status"))
+	{
+		status = formValues.get("status").get("label");
+		status_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects"
+			type :GET
+			connection:"openproject"
+		];
+		status_content = status_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in status_content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(!val.get("_links").get("status").get("href").isNull())
+			{
+				if(val.get("_links").get("status").get("title").equals(status))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					if(!val.get("_links").get("status").get("href").isNull())
+					{
+						column.put("Status",val.get("_links").get("status").get("title"));
+					}
+					else
+					{
+						column.put("Status","-");
+					}
+					if(!val.get("_links").get("parent").get("href").isNull())
+					{
+						column.put("Parent",val.get("_links").get("parent").get("title"));
+					}
+					else
+					{
+						column.put("Parent","-");
+					}
+					column.put("Delete","[Delete #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to delete filtered project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Delete","data":{"headers":{"Id","Name","Status","Parent","Delete"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	else if(filter.get("label").equals("Parent"))
+	{
+		parent = formValues.get("parent").get("label");
+		parent_response = invokeurl
+		[
+			url :instance_url + "api/v3/projects"
+			type :GET
+			connection:"openproject"
+		];
+		parent_content = parent_response.getFileContent().get("_embedded").get("elements");
+		count = 0;
+		for each  val in parent_content
+		{
+			if(count == 49)
+			{
+				break;
+			}
+			if(!val.get("_links").get("parent").get("href").isNull())
+			{
+				if(val.get("_links").get("parent").get("title").equals(parent))
+				{
+					column = Map();
+					column.put("Id",val.get("id"));
+					column.put("Name",val.get("name"));
+					if(!val.get("_links").get("status").get("href").isNull())
+					{
+						column.put("Status",val.get("_links").get("status").get("title"));
+					}
+					else
+					{
+						column.put("Status","-");
+					}
+					if(!val.get("_links").get("parent").get("href").isNull())
+					{
+						column.put("Parent",val.get("_links").get("parent").get("title"));
+					}
+					else
+					{
+						column.put("Parent","-");
+					}
+					column.put("Delete","[Delete #" + val.get("id") + "](invoke.function|authorize)");
+					view_content.add(column);
+					count = count + 1;
+				}
+			}
+		}
+		if(view_content.length() == 0)
+		{
+			check = true;
+		}
+		else
+		{
+			package_list = {"text":"Click to delete filtered project details","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/1087/1087815.png","theme":"prompt"},"slides":{{"type":"table","title":"Project - Delete","data":{"headers":{"Id","Name","Status","Parent","Delete"},"rows":view_content}}}};
+			return package_list;
+		}
+	}
+	if(check)
+	{
+		empty = {"text":"No projects found for the given filter","bot":{"name":"OpenProject","image":"https://www.openproject.org/assets/images/press/openproject-icon-original-color-d69b9220.png"},"card":{"thumbnail":"https://cdn-icons-png.flaticon.com/512/10313/10313348.png","theme":"prompt"}};
+		return empty;
+	}
+}
+return response;

@@ -1,0 +1,39 @@
+
+//The variable message will have the current message for which the action is triggered
+response = Map();
+info message;
+//////////////////////////////////////////////////////////////
+instance_url = "https://openproject30.openproject.com/";
+//////////////////////////////////////////////////////////////
+msg = message.get("content").get("text");
+parent_response = invokeurl
+[
+	url :instance_url + "api/v3/work_packages?pageSize=100"
+	type :GET
+	connection:"openproject"
+];
+parent_id = List();
+parent_list = List();
+parent_content = parent_response.getFileContent().get("_embedded").get("elements");
+for each  val in parent_content
+{
+	parent_type = val.get("_links").get("self").get("title") + " (" + val.get("_links").get("type").get("title") + ")";
+	href_val = val.get("_links").get("self").get("href");
+	pos = href_val.lastIndexOf("/");
+	last_sub = href_val.subString(pos + 1);
+	parent_id.add(last_sub);
+	parent_list.add(parent_type);
+}
+form_content = {"type":"form","title":"Post to Work Package","name":"post_comment","hint":"To post comments to a specific work package","button_label":"Submit","inputs":{{"label":"Comment","value":msg,"name":"comment","placeholder":"Enter the comment for the work package","min_length":"0","max_length":"255","mandatory":true,"type":"textarea"},{"label":"Work Package","name":"subject","placeholder":"Select the work package where the comment should be saved","multiple":false,"mandatory":true,"type":"select","options":{}}},"action":{"type":"invoke.function","name":"createform"}};
+parent = form_content.get("inputs").get(1).get("options");
+size = parent_list.size() - 1;
+for each  val in parent_list
+{
+	rev_val = parent_list.get(size);
+	optionMap = Map();
+	optionMap.put("label",rev_val);
+	optionMap.put("value",parent_id.get(size));
+	parent.add(optionMap);
+	size = size - 1;
+}
+return form_content;
